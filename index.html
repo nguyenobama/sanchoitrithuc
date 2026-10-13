@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Sân Chơi Tri Thức THCS</title>
+  <!-- Nạp thư viện SheetJS & Mammoth đọc và ghi Excel/Word -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+    }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body { 
+      background: var(--bg); 
+      color: var(--text); 
+      padding-bottom: 30px;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+    .container { 
+      max-width: 1180px; 
+      margin: 0 auto; 
+      padding: 12px; 
+    }
+
+    button, select, input, textarea {
+      touch-action: manipulation;
+    }
+
+    /* BANNER */
+    .banner {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: white; 
+      border-radius: 16px; 
+      padding: 20px 24px;
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      margin-bottom: 16px; 
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .banner-info { flex: 1; min-width: 250px; }
+    .banner-tag { 
+      background: rgba(255, 255, 255, 0.2); 
+      padding: 4px 12px; 
+      border-radius: 20px; 
+      font-size: 11px; 
+      font-weight: 700; 
+      text-transform: uppercase; 
+      display: inline-block; 
+      margin-bottom: 6px; 
+    }
+    .banner h1 { font-size: 22px; font-weight: 800; letter-spacing: 0.5px; }
+    .banner p { font-size: 13px; opacity: 0.9; margin-top: 3px; }
+    .banner-actions { display: flex; gap: 8px; }
+    .icon-btn { 
+      background: rgba(255, 255, 255, 0.2); 
+      border: 1px solid rgba(255, 255, 255, 0.35); 
+      color: white; 
+      width: 44px; 
+      height: 44px; 
+      border-radius: 12px; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 18px; 
+      transition: all 0.15s ease; 
+    }
+    .icon-btn:active { transform: scale(0.92); }
+
+    /* LAYOUT & CARDS */
+    .main-grid { 
+      display: grid; 
+      grid-template-columns: 2.2fr 1fr; 
+      gap: 16px; 
+    }
+    .card { 
+      background: var(--card-bg); 
+      border: 1px solid var(--border); 
+      border-radius: 16px; 
+      padding: 20px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+      margin-bottom: 16px; 
+    }
+    .card-title { 
+      font-size: 15px; 
+      font-weight: 700; 
+      margin-bottom: 14px; 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      color: var(--text);
+    }
+
+    /* FORM NHẬP THÔNG TIN */
+    .student-inputs { 
+      display: grid; 
+      grid-template-columns: 1.5fr 1fr 1fr; 
+      gap: 10px; 
+      margin-bottom: 16px; 
+    }
+    .input-group label { 
+      display: block; 
+      font-size: 12px; 
+      font-weight: 700; 
+      color: var(--text-muted); 
+      margin-bottom: 5px; 
+    }
+    .input-group input, .input-group select, .input-group textarea { 
+      width: 100%; 
+      padding: 11px 12px; 
+      border: 1.5px solid var(--border); 
+      border-radius: 10px; 
+      font-size: 16px; /* 16px ngăn Safari tự động zoom */
+      outline: none; 
+      background: #fff;
+      color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .input-group input:focus, .input-group select:focus, .input-group textarea:focus { 
+      border-color: var(--primary); 
+    }
+
+    /* LƯỚI CHỌN MÔN */
+    .subject-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); 
+      gap: 10px; 
+      margin-bottom: 20px; 
+    }
+    .subject-btn { 
+      border: 2px solid var(--border); 
+      background: #fff; 
+      border-radius: 12px; 
+      padding: 12px 6px; 
+      text-align: center; 
+      cursor: pointer; 
+      transition: all 0.15s ease; 
+      user-select: none; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 72px;
+    }
+    .subject-btn .icon { font-size: 24px; margin-bottom: 4px; }
+    .subject-btn .name { font-weight: 700; font-size: 13px; color: var(--text); }
+    .subject-btn .sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .subject-btn.active { 
+      border-color: var(--primary); 
+      background: var(--primary-light); 
+      box-shadow: 0 4px 12px rgba(37,99,235,0.12);
+    }
+    .subject-btn.active .name { color: var(--primary); }
+    .subject-btn:active { transform: scale(0.95); }
+
+    /* LƯỚI CHẾ ĐỘ THI */
+    .mode-grid { 
+      display: grid; 
+      grid-template-columns: repeat(2, 1fr); 
+      gap: 12px; 
+    }
+    .mode-btn { 
+      border: 1.5px solid var(--border); 
+      background: #fff; 
+      border-radius: 14px; 
+      padding: 14px; 
+      cursor: pointer; 
+      display: flex; 
+      gap: 12px; 
+      align-items: center; 
+      transition: all 0.15s ease; 
+      text-align: left; 
+      user-select: none; 
+      width: 100%;
+      min-height: 68px;
+    }
+    .mode-btn:hover { 
+      border-color: var(--primary); 
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06); 
+    }
+    .mode-btn:active { transform: scale(0.97); }
+    .mode-icon { font-size: 26px; flex-shrink: 0; }
+    .mode-title { font-weight: 700; font-size: 14px; color: var(--text); }
+    .mode-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* CỘT THỐNG KÊ */
+    .stats-row { 
+      display: grid; 
+      grid-template-columns: repeat(2, 1fr); 
+      gap: 10px; 
+      margin-bottom: 14px; 
+      text-align: center; 
+    }
+    .stat-box { 
+      background: #f8fafc; 
+      border: 1px solid var(--border); 
+      padding: 12px; 
+      border-radius: 12px; 
+    }
+    .stat-val { font-size: 22px; font-weight: 800; color: var(--primary); }
+    .stat-label { font-size: 12px; color: var(--text-muted); }
+    .history-list { font-size: 13px; max-height: 320px; overflow-y: auto; }
+    .history-item { 
+      display: flex; 
+      justify-content: space-between; 
+      padding: 9px 0; 
+      border-bottom: 1px dashed var(--border); 
+      font-size: 12px;
+    }
+
+    /* MÀN HÌNH THIẾT LẬP LƯỢT HỌC */
+    .setup-screen { display: none; }
+    .setup-title-box {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+    }
+    .setup-title-box h2 { font-size: 19px; color: var(--text); }
+    .setup-title-box p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .setup-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    /* PHÒNG THI */
+    .quiz-card { display: none; }
+    .quiz-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 15px; 
+      padding-bottom: 12px; 
+      border-bottom: 1.5px solid var(--border); 
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .badge-wrap { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .quiz-question { 
+      font-size: 17px; 
+      font-weight: 700; 
+      line-height: 1.55; 
+      margin-bottom: 18px; 
+      color: #0f172a;
+    }
+    .options-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 12px; 
+      margin-bottom: 20px; 
+    }
+    .option-btn { 
+      border: 2px solid var(--border); 
+      background: white; 
+      padding: 14px 16px; 
+      border-radius: 12px; 
+      font-size: 14px; 
+      font-weight: 600; 
+      text-align: left; 
+      cursor: pointer; 
+      transition: all 0.15s ease; 
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      line-height: 1.4;
+      width: 100%;
+    }
+    .option-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+    .option-btn:active:not(:disabled) { transform: scale(0.98); }
+    .option-btn.correct { background: var(--success-light) !important; border-color: var(--success) !important; color: var(--success); }
+    .option-btn.wrong { background: var(--danger-light) !important; border-color: var(--danger) !important; color: var(--danger); }
+    .explanation-box { 
+      background: #eff6ff; 
+      border: 1px solid #bfdbfe; 
+      border-radius: 10px; 
+      padding: 12px 14px; 
+      font-size: 13px; 
+      margin-bottom: 15px; 
+      display: none; 
+      line-height: 1.5;
+    }
+
+    /* ĐỐI KHÁNG */
+    .versus-bar { 
+      display: flex; 
+      justify-content: space-between; 
+      margin-bottom: 18px; 
+      gap: 12px; 
+    }
+    .team-card { 
+      flex: 1; 
+      padding: 12px; 
+      border-radius: 12px; 
+      text-align: center; 
+      border: 2px solid var(--border); 
+      transition: all 0.2s; 
+    }
+    .team-card.team-a { border-color: #3b82f6; background: #eff6ff; }
+    .team-card.team-b { border-color: #f97316; background: #fff7ed; }
+    .team-card.active-turn { box-shadow: 0 0 0 4px #fbbf24; transform: scale(1.02); }
+    .team-score { font-size: 28px; font-weight: 800; margin: 4px 0; }
+    .bell-btn { 
+      width: 100%; 
+      padding: 12px; 
+      border: none; 
+      border-radius: 8px; 
+      font-weight: 700; 
+      cursor: pointer; 
+      font-size: 14px;
+    }
+    .bell-btn:active { transform: scale(0.95); }
+
+    /* SCOREBOARD PHẢN XẠ NHANH */
+    .reflex-score-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .reflex-box {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .reflex-box-val { font-size: 18px; font-weight: 800; color: var(--primary); }
+    .reflex-box-label { font-size: 11px; color: var(--text-muted); }
+
+    /* BUTTONS */
+    .btn { 
+      background: var(--primary); 
+      color: white; 
+      border: none; 
+      padding: 11px 18px; 
+      border-radius: 10px; 
+      font-weight: 700; 
+      cursor: pointer; 
+      transition: all 0.15s ease; 
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 44px;
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn:hover { background: var(--primary-dark); }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #f1f5f9; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-success { background: var(--success); color: white; }
+
+    /* ADMIN & MODALS */
+    .tab-nav { display: flex; gap: 8px; border-bottom: 2px solid var(--border); margin-bottom: 18px; overflow-x: auto; }
+    .tab-btn { padding: 10px 14px; border: none; background: transparent; font-weight: 700; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; font-size: 13px; }
+    .tab-btn.active { color: var(--primary); border-color: var(--primary); }
+    .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; font-weight: 700; }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.55); 
+      display: none; 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 1000;
+      padding: 12px;
+    }
+    .modal-content {
+      background: white; border-radius: 16px; max-width: 650px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    /* AUTHOR FOOTER */
+    .author-footer {
+      margin-top: 25px;
+      padding: 14px 18px;
+      text-align: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .author-text {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+      line-height: 1.4;
+    }
+
+    /* MÀN HÌNH TỔNG KẾT & CÂU CẦN XEM LẠI */
+    .wrong-review-card {
+      text-align: left;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    /* RESPONSIVE DI ĐỘNG */
+    @media (max-width: 768px) {
+      .container { padding: 8px; }
+      .banner { padding: 14px 16px; border-radius: 14px; }
+      .banner h1 { font-size: 19px; }
+      .banner p { font-size: 12px; }
+      .main-grid { grid-template-columns: 1fr; gap: 12px; }
+      .student-inputs { grid-template-columns: 1fr; gap: 8px; }
+      .setup-form-grid { grid-template-columns: 1fr; gap: 10px; }
+      .subject-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .mode-grid { grid-template-columns: 1fr; gap: 10px; }
+      .options-grid { grid-template-columns: 1fr; gap: 10px; }
+      .quiz-question { font-size: 16px; margin-bottom: 14px; }
+      .versus-bar { flex-direction: column; gap: 10px; }
+      .author-text { font-size: 12px; }
+      .reflex-score-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- BANNER -->
+  <div class="banner">
+    <div class="banner-info">
+      <span class="banner-tag">Học • Luyện • Thi Đấu THCS</span>
+      <h1>SÂN CHƠI TRI THỨC THCS</h1>
+      <p>Ngân hàng 160 câu hỏi chuẩn GDPT – 4 Khối lớp (6, 7, 8, 9) và 8 Môn học cốt lõi.</p>
+    </div>
+    <div class="banner-actions">
+      <button type="button" class="icon-btn" title="Toàn màn hình" onclick="toggleFullscreen()">⛶</button>
+      <button type="button" class="icon-btn" title="Admin Studio" onclick="openAdminAuthModal()">⚙️</button>
+    </div>
+  </div>
+
+  <!-- 1. MÀN HÌNH CHÍNH -->
+  <div id="home-screen" class="main-grid">
+    <div>
+      <div class="card">
+        <div class="card-title">👤 Thông tin học sinh / Thí sinh</div>
+        <div class="student-inputs">
+          <div class="input-group">
+            <label>Họ và tên</label>
+            <input type="text" id="studentName" value="Nguyễn Văn An" autocomplete="name">
+          </div>
+          <div class="input-group">
+            <label>Khối lớp học</label>
+            <select id="studentGrade" onchange="updateGradeSelection()">
+              <option value="all">Tất cả khối</option>
+              <option value="6">Khối 6</option>
+              <option value="7" selected>Khối 7</option>
+              <option value="8">Khối 8</option>
+              <option value="9">Khối 9</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Lớp học</label>
+            <input type="text" id="studentClass" value="7A">
+          </div>
+        </div>
+
+        <div class="card-title">📚 Chọn môn học (Chương trình GDPT THCS)</div>
+        <div class="subject-grid">
+          <button type="button" class="subject-btn active" onclick="selectSubject('all', this)">
+            <span class="icon">🌌</span>
+            <span class="name">Tổng hợp</span>
+            <span class="sub">Tất cả môn</span>
+          </button>
+          <button type="button" class="subject-btn" onclick="selectSubject('toan', this)">
+            <span class="icon">📐</span>
+            <span class="name">Toán</span>
+            <span class="sub">Đại số & Hình</span>
+          </button>
+          <button type="button" class="subject-btn" onclick="selectSubject('van', this)">
+            <span class="icon">📖</span>
+            <span class="name">Ngữ văn</span>
+            <span class="sub">Đọc hiểu & TV</span>
+          </button>
+          <button type="button" class="subject-btn" onclick="selectSubject('anh', this)">
+            <span class="icon">🌍</span>
+            <span class="name">Tiếng Anh</span>
+            <span class="sub">Từ vựng & NP</span>
+          </button>
+          <button type="button" class="subject-btn" onclick="selectSubject('khtn', this)">
+            <span class="icon">🔬</span>
+            <span class="name">KHTN</span>
+            <span class="sub">Lý - Hóa - Sinh</span>
+          </button>
+          <button type="button" class="subject-btn" onclick="selectSubject('su-dia', this)">
+            <span class="icon">🗺️</span>
+            <span class="name">Lịch sử & ĐL</span>
+            <span class="sub">Sử & Địa lý</span>
+          </button>
+          <button type="button" class="subject-btn" onclick="selectSubject('tin', this)">
+            <span class="icon">💻</span>
+            <span class="name">Tin học</span>
+            <span class="sub">Số học & Coding</span>
+          </button>
+          <button type="button" class="subject-btn" onclick="selectSubject('cong-nghe', this)">
+            <span class="icon">⚙️</span>
+            <span class="name">Công nghệ</span>
+            <span class="sub">Kỹ thuật đời sống</span>
+          </button>
+          <button type="button" class="subject-btn" onclick="selectSubject('gdcd', this)">
+            <span class="icon">⚖️</span>
+            <span class="name">GDCD</span>
+            <span class="sub">Đạo đức & Luật</span>
+          </button>
+        </div>
+
+        <div class="card-title">🎮 Chế độ ôn tập & Thi đấu</div>
+        <div class="mode-grid">
+          <button type="button" class="mode-btn" onclick="openModeSetup('tu-hoc')">
+            <span class="mode-icon">📖</span>
+            <div>
+              <div class="mode-title">Tự học</div>
+              <div class="mode-desc">Phản hồi & giải thích ngay</div>
+            </div>
+          </button>
+          <button type="button" class="mode-btn" onclick="openModeSetup('thi-thu')">
+            <span class="mode-icon">⏱️</span>
+            <div>
+              <div class="mode-title">Thi thử</div>
+              <div class="mode-desc">Giới hạn thời gian làm bài</div>
+            </div>
+          </button>
+          <button type="button" class="mode-btn" onclick="openModeSetup('phan-xa')">
+            <span class="mode-icon">⚡</span>
+            <div>
+              <div class="mode-title">Phản xạ nhanh</div>
+              <div class="mode-desc">Combo & tính điểm tốc độ</div>
+            </div>
+          </button>
+          <button type="button" class="mode-btn" onclick="openModeSetup('doi-khang')">
+            <span class="mode-icon">🏆</span>
+            <div>
+              <div class="mode-title">Đối kháng (2 Đội)</div>
+              <div class="mode-desc">Hai người / Hai đội bấm chuông</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CỘT THÀNH TÍCH -->
+    <div>
+      <div class="card">
+        <div class="card-title">📊 Kết quả gần đây</div>
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-val" id="stat-count">0</div>
+            <div class="stat-label">Lượt thi</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="stat-acc">0%</div>
+            <div class="stat-label">Tỉ lệ đúng</div>
+          </div>
+        </div>
+        <div class="card-title" style="font-size: 13px;">Lịch sử chi tiết:</div>
+        <div class="history-list" id="history-box">
+          <p style="color: var(--text-muted); font-size: 12px;">Chưa có dữ liệu.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.5 MÀN HÌNH THIẾT LẬP LƯỢT HỌC (CHUẨN VIDEO) -->
+  <div id="setup-screen" class="card setup-screen">
+    <div class="setup-title-box">
+      <h2 id="setup-mode-title">📖 Thiết lập lượt học</h2>
+      <p id="setup-mode-subtitle">Thiết lập cấu hình trước khi bắt đầu bài kiểm tra.</p>
+    </div>
+
+    <div class="setup-form-grid">
+      <!-- Cho đối kháng: tên 2 đội -->
+      <div class="input-group" id="setup-group-team-a" style="display: none;">
+        <label>Tên Đội A</label>
+        <input type="text" id="setupTeamA" value="Đội A - Gà trống">
+      </div>
+      <div class="input-group" id="setup-group-team-b" style="display: none;">
+        <label>Tên Đội B</label>
+        <input type="text" id="setupTeamB" value="Đội B - Vịt xiêm">
+      </div>
+
+      <div class="input-group">
+        <label>Khối lớp áp dụng</label>
+        <select id="setupGrade">
+          <option value="all">Tất cả khối lớp</option>
+          <option value="6">Khối 6</option>
+          <option value="7" selected>Khối 7</option>
+          <option value="8">Khối 8</option>
+          <option value="9">Khối 9</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Mức độ câu hỏi</label>
+        <select id="setupDifficulty">
+          <option value="all">Tất cả mức độ</option>
+          <option value="de">Dễ</option>
+          <option value="tb">Trung bình</option>
+          <option value="kho">Khó</option>
+        </select>
+      </div>
+
+      <div class="input-group" id="setup-group-total-q">
+        <label>Số lượng câu hỏi</label>
+        <select id="setupTotalQ">
+          <option value="5">5 câu</option>
+          <option value="10" selected>10 câu</option>
+          <option value="15">15 câu</option>
+          <option value="20">20 câu</option>
+          <option value="all">Toàn bộ ngân hàng</option>
+        </select>
+      </div>
+
+      <!-- Thời gian/câu cho Thi thử hoặc Đối kháng -->
+      <div class="input-group" id="setup-group-time-per-q" style="display: none;">
+        <label>Thời gian mỗi câu</label>
+        <select id="setupTimePerQ">
+          <option value="10">10 giây</option>
+          <option value="15" selected>15 giây</option>
+          <option value="20">20 giây</option>
+          <option value="30">30 giây</option>
+          <option value="45">45 giây</option>
+        </select>
+      </div>
+
+      <!-- Thời lượng tổng cho Phản xạ nhanh -->
+      <div class="input-group" id="setup-group-duration" style="display: none;">
+        <label>Thời lượng làm bài</label>
+        <select id="setupDuration">
+          <option value="45">45 giây</option>
+          <option value="60" selected>60 giây</option>
+          <option value="90">90 giây</option>
+          <option value="120">120 giây</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Thứ tự hiển thị câu hỏi</label>
+        <select id="setupOrder">
+          <option value="random">Ngẫu nhiên đảo đề</option>
+          <option value="asc">Từ Dễ đến Khó</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; justify-content: flex-start; flex-wrap: wrap;">
+      <button type="button" class="btn btn-success" onclick="confirmStartQuiz()">▶ Bắt đầu</button>
+      <button type="button" class="btn btn-outline" onclick="exitToHome()">↩ Quay lại</button>
+    </div>
+  </div>
+
+  <!-- 2. PHÒNG THI -->
+  <div id="quiz-screen" class="card quiz-card">
+    <!-- ĐỐI KHÁNG -->
+    <div id="versus-area" class="versus-bar" style="display: none;">
+      <div id="team-box-a" class="team-card team-a">
+        <div style="font-weight: 700; font-size: 13px;" id="team-name-label-a">ĐỘI A</div>
+        <div class="team-score" id="score-a">0</div>
+        <button type="button" class="bell-btn" style="background: #3b82f6; color: #fff;" onclick="bellPress('A')">🔔 GIÀNH QUYỀN A (Phím A)</button>
+      </div>
+      <div id="team-box-b" class="team-card team-b">
+        <div style="font-weight: 700; font-size: 13px;" id="team-name-label-b">ĐỘI B</div>
+        <div class="team-score" id="score-b">0</div>
+        <button type="button" class="bell-btn" style="background: #f97316; color: #fff;" onclick="bellPress('B')">🔔 GIÀNH QUYỀN B (Phím L)</button>
+      </div>
+    </div>
+
+    <!-- PHẢN XẠ NHANH: SCOREBOARD COMBO -->
+    <div id="reflex-bar" class="reflex-score-bar" style="display: none;">
+      <div class="reflex-box">
+        <div class="reflex-box-val" id="reflex-score">0</div>
+        <div class="reflex-box-label">Điểm</div>
+      </div>
+      <div class="reflex-box">
+        <div class="reflex-box-val" id="reflex-correct">0</div>
+        <div class="reflex-box-label">Đúng</div>
+      </div>
+      <div class="reflex-box">
+        <div class="reflex-box-val" id="reflex-combo">0</div>
+        <div class="reflex-box-label">Combo</div>
+      </div>
+      <div class="reflex-box">
+        <div class="reflex-box-val" id="reflex-max-combo">0</div>
+        <div class="reflex-box-label">Combo cao</div>
+      </div>
+    </div>
+
+    <div class="quiz-header">
+      <div class="badge-wrap">
+        <span id="quiz-badge" style="background: #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">TỰ HỌC</span>
+        <span id="quiz-subject-badge" style="background: #eff6ff; color: #2563eb; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">MÔN</span>
+        <span id="quiz-grade-badge" style="background: #fef3c7; color: #d97706; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">KHỐI</span>
+        <span id="quiz-progress" style="font-weight: 700; font-size: 13px; margin-left: 4px;">Câu 1/10</span>
+      </div>
+      <div id="quiz-timer" style="font-weight: 800; color: var(--danger); font-size: 17px;"></div>
+    </div>
+
+    <div id="versus-status" style="font-size: 13px; font-weight: 700; margin-bottom: 10px; color: #b45309; display: none;"></div>
+    <div class="quiz-question" id="quiz-q-text">Đang tải câu hỏi...</div>
+    <div class="options-grid" id="quiz-options"></div>
+
+    <div class="explanation-box" id="quiz-exp">
+      <div id="quiz-result-tag" style="font-weight: 800; margin-bottom: 4px;"></div>
+      <b>💡 Lời giải / Kiến thức: </b><span id="quiz-exp-text"></span>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 10px; flex-wrap: wrap;">
+      <button type="button" class="btn btn-outline" onclick="exitToHome()">Thoát</button>
+      <div style="font-size: 12px; color: var(--text-muted); display: none;" id="keyboard-hint">Phím 1-4: chọn • Enter: tiếp</div>
+      <button type="button" class="btn" id="quiz-next-btn" onclick="nextQuestion()" style="display: none;">Tiếp tục ➔</button>
+    </div>
+  </div>
+
+  <!-- 3. TỔNG KẾT -->
+  <div id="summary-screen" class="card quiz-card" style="text-align: center; padding: 35px 20px;">
+    <div style="font-size: 54px; font-weight: 800; color: var(--primary);" id="sum-acc">100%</div>
+    <h2 id="sum-status" style="margin: 10px 0; font-size: 22px;">Xuất sắc!</h2>
+    <p id="sum-detail" style="color: var(--text-muted); margin-bottom: 22px; font-size: 14px;">Đúng 10/10 câu</p>
+    
+    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px;">
+      <button type="button" class="btn" onclick="confirmStartQuiz()">Chơi lại</button>
+      <button type="button" class="btn btn-warning" id="btn-review-wrong" onclick="startWrongReview()" style="display: none;">Ôn câu sai</button>
+      <button type="button" class="btn btn-outline" onclick="exitToHome()">Về trang chính</button>
+    </div>
+
+    <!-- DANH SÁCH CÂU CẦN XEM LẠI (GIỐNG VIDEO) -->
+    <div id="review-wrong-list-box" style="display: none; text-align: left;">
+      <h3 style="font-size: 15px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">📝 Câu cần xem lại:</h3>
+      <div id="review-wrong-items"></div>
+    </div>
+  </div>
+
+  <!-- 4. ADMIN STUDIO -->
+  <div id="admin-screen" class="card quiz-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+      <h2>⚙️ Admin Studio - Quản trị Sân Chơi Tri Thức</h2>
+      <button type="button" class="btn btn-outline" onclick="exitToHome()">Thoát quản trị</button>
+    </div>
+
+    <div class="tab-nav">
+      <button type="button" class="tab-btn active" onclick="switchAdminTab('ngan-hang', this)">Ngân hàng câu hỏi</button>
+      <button type="button" class="tab-btn" onclick="switchAdminTab('lich-su', this)">Lịch sử thi</button>
+      <button type="button" class="tab-btn" onclick="switchAdminTab('cau-hinh', this)">Cấu hình & Mật khẩu</button>
+    </div>
+
+    <!-- TAB NGÂN HÀNG CÂU HỎI -->
+    <div id="tab-ngan-hang">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
+        <div style="font-size: 13px;">Tổng số: <b id="admin-total-q">0</b> câu hỏi</div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" class="btn" onclick="openQuestionModal(null)">+ Thêm câu</button>
+          <button type="button" class="btn btn-success" onclick="downloadExcelTemplate()">📥 Tải mẫu Excel (.xlsx)</button>
+          <button type="button" class="btn btn-outline" onclick="downloadWordTemplate()">📥 Tải mẫu Word (.txt)</button>
+          <button type="button" class="btn btn-warning" onclick="document.getElementById('importDocs').click()">📄 Nạp Word/Excel</button>
+          <input type="file" id="importDocs" accept=".xlsx, .xls, .csv, .docx, .txt" style="display: none;" onchange="importDocuments(event)">
+          <button type="button" class="btn btn-outline" onclick="exportJSON()">Xuất JSON</button>
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('importFile').click()">Nhập JSON</button>
+          <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importJSON(event)">
+          <button type="button" class="btn btn-danger" onclick="restoreDefault160()">Khôi phục 160 câu gốc</button>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Khối</th>
+              <th>Môn</th>
+              <th>Nội dung câu hỏi</th>
+              <th>Đáp án đúng</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="admin-q-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB LỊCH SỬ -->
+    <div id="tab-lich-su" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+        <button type="button" class="btn btn-outline" onclick="exportHistoryCSV()">Xuất file CSV</button>
+        <button type="button" class="btn btn-danger" onclick="promptClearHistory()">Xóa toàn bộ lịch sử</button>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Thời gian</th>
+              <th>Họ tên</th>
+              <th>Lớp</th>
+              <th>Chế độ</th>
+              <th>Kết quả</th>
+            </tr>
+          </thead>
+          <tbody id="admin-hist-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB CẤU HÌNH -->
+    <div id="tab-cau-hinh" style="display: none;">
+      <div style="max-width: 450px;">
+        <div class="input-group" style="margin-bottom: 14px;">
+          <label>Mật khẩu quản trị mới:</label>
+          <input type="password" id="newAdminPass" placeholder="Nhập mật khẩu mới">
+        </div>
+        <button type="button" class="btn" onclick="saveAdminPass()">Đổi mật khẩu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DÒNG THÔNG TIN TÁC GIẢ -->
+  <footer class="author-footer">
+    <div class="author-text">
+      Nguyễn Ngọc Đồng - Trường THCS Diễn Châu 2 - Nghệ An
+    </div>
+  </footer>
+</div>
+
+<!-- MODAL ĐĂNG NHẬP ADMIN -->
+<div id="adminAuthModal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 400px; text-align: center;">
+    <h3 style="margin-bottom: 12px; font-size: 18px;">🔐 Quản Trị Viên (Admin)</h3>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Vui lòng nhập mật khẩu quản trị để tiếp tục (Mặc định: <b>admin123</b>)</p>
+    <div class="input-group" style="margin-bottom: 18px;">
+      <input type="password" id="adminAuthInput" placeholder="Nhập mật khẩu..." style="text-align: center; font-size: 16px;">
+    </div>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeAdminAuthModal()">Hủy</button>
+      <button type="button" class="btn" style="flex: 1;" onclick="confirmAdminAuth()">Đăng nhập</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL XÁC NHẬN -->
+<div id="confirmDialogModal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 420px; text-align: center;">
+    <h3 id="confirmDialogTitle" style="margin-bottom: 10px; font-size: 17px;">Xác nhận thao tác</h3>
+    <p id="confirmDialogMessage" style="font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;"></p>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeConfirmModal(false)">Hủy bỏ</button>
+      <button type="button" class="btn btn-danger" style="flex: 1;" onclick="closeConfirmModal(true)">Đồng ý</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SỬA/THÊM CÂU HỎI -->
+<div id="questionModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 id="modalTitle" style="margin-bottom: 14px;">Thêm / Sửa câu hỏi</h3>
+    <input type="hidden" id="editIndex" value="-1">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+      <div class="input-group">
+        <label>Khối lớp</label>
+        <select id="modalKhoi">
+          <option value="all">Dùng chung (Cả cấp 2)</option>
+          <option value="6">Khối 6</option>
+          <option value="7">Khối 7</option>
+          <option value="8">Khối 8</option>
+          <option value="9">Khối 9</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Môn học (GDPT THCS)</label>
+        <select id="modalMon">
+          <option value="toan">Toán học</option>
+          <option value="van">Ngữ văn</option>
+          <option value="anh">Tiếng Anh</option>
+          <option value="khtn">Khoa học tự nhiên (KHTN)</option>
+          <option value="su-dia">Lịch sử & Địa lí</option>
+          <option value="tin">Tin học</option>
+          <option value="cong-nghe">Công nghệ</option>
+          <option value="gdcd">Giáo dục công dân (GDCD)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="input-group" style="margin-bottom: 10px;">
+      <label>Nội dung câu hỏi</label>
+      <textarea id="modalDe" rows="3" placeholder="Nhập nội dung câu hỏi..."></textarea>
+    </div>
+
+    <div style="grid-template-columns: 1fr 1fr; display: grid; gap: 10px; margin-bottom: 10px;">
+      <div class="input-group">
+        <label>Đáp án A</label>
+        <input type="text" id="modalOpt0">
+      </div>
+      <div class="input-group">
+        <label>Đáp án B</label>
+        <input type="text" id="modalOpt1">
+      </div>
+      <div class="input-group">
+        <label>Đáp án C</label>
+        <input type="text" id="modalOpt2">
+      </div>
+      <div class="input-group">
+        <label>Đáp án D</label>
+        <input type="text" id="modalOpt3">
+      </div>
+    </div>
+
+    <div class="input-group" style="margin-bottom: 10px;">
+      <label>Đáp án đúng</label>
+      <select id="modalAns">
+        <option value="0">Đáp án A</option>
+        <option value="1">Đáp án B</option>
+        <option value="2">Đáp án C</option>
+        <option value="3">Đáp án D</option>
+      </select>
+    </div>
+
+    <div class="input-group" style="margin-bottom: 15px;">
+      <label>Giải thích / Lời giải</label>
+      <textarea id="modalExp" rows="2" placeholder="Giải thích ngắn gọn..."></textarea>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+      <button type="button" class="btn btn-outline" onclick="closeQuestionModal()">Hủy</button>
+      <button type="button" class="btn" onclick="saveQuestionModal()">Lưu lại</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST THÔNG BÁO -->
+<div id="toastBox" style="position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 9999; display: none; background: #0f172a; color: #ffffff; padding: 11px 22px; border-radius: 10px; font-weight: 700; font-size: 13px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); max-width: 90%; text-align: center; border: 1px solid rgba(255,255,255,0.15);"></div>
+
+<script>
+  function notify(msg, duration) {
+    var toast = document.getElementById('toastBox');
+    if (!toast) return;
+    toast.innerText = msg;
+    toast.style.display = 'block';
+    setTimeout(function() { toast.style.display = 'none'; }, duration || 2500);
+  }
+
+  var confirmCallback = null;
+  function showConfirm(title, message, onConfirm) {
+    var modal = document.getElementById('confirmDialogModal');
+    document.getElementById('confirmDialogTitle').innerText = title;
+    document.getElementById('confirmDialogMessage').innerText = message;
+    confirmCallback = onConfirm;
+    if (modal) modal.style.display = 'flex';
+  }
+  function closeConfirmModal(result) {
+    var modal = document.getElementById('confirmDialogModal');
+    if (modal) modal.style.display = 'none';
+    if (result && typeof confirmCallback === 'function') {
+      confirmCallback();
+    }
+    confirmCallback = null;
+  }
+
+  const subjectNames = {
+    'all': 'Tổng hợp',
+    'toan': 'Toán',
+    'van': 'Ngữ văn',
+    'anh': 'Tiếng Anh',
+    'khtn': 'KHTN',
+    'su-dia': 'Lịch sử & ĐL',
+    'tin': 'Tin học',
+    'cong-nghe': 'Công nghệ',
+    'gdcd': 'GDCD'
+  };
+
+  const gradeNames = {
+    'all': 'Dùng chung',
+    '6': 'Khối 6',
+    '7': 'Khối 7',
+    '8': 'Khối 8',
+    '9': 'Khối 9'
+  };
+
+  const fullQuestions160 = [
+    // KHỐI 6
+    { id: 1, khoi: '6', mon: 'toan', de: 'Số nào sau đây là số nguyên tố chẵn duy nhất?', options: ['0', '2', '4', '6'], ans: 1, exp: 'Số 2 là số nguyên tố chẵn duy nhất vì nó chỉ có 2 ước là 1 và 2.' },
+    { id: 2, khoi: '6', mon: 'toan', de: 'Tập hợp các ước tự nhiên của 6 là:', options: ['{1; 2; 3; 6}', '{2; 3; 6}', '{1; 2; 3}', '{0; 1; 2; 3; 6}'], ans: 0, exp: 'Các số tự nhiên mà 6 chia hết là 1, 2, 3 và 6.' },
+    { id: 3, khoi: '6', mon: 'toan', de: 'Kết quả của phép tính (-15) + (-20) là:', options: ['-5', '35', '-35', '5'], ans: 2, exp: 'Tổng của hai số nguyên âm: (-15) + (-20) = -(15 + 20) = -35.' },
+    { id: 4, khoi: '6', mon: 'toan', de: 'Hình lục giác đều có bao nhiêu cạnh bằng nhau?', options: ['4 cạnh', '5 cạnh', '6 cạnh', '8 cạnh'], ans: 2, exp: 'Hình lục giác đều có 6 cạnh bằng nhau và 6 góc bằng nhau.' },
+    { id: 5, khoi: '6', mon: 'toan', de: 'Phân số 3/4 viết dưới dạng số thập phân là:', options: ['0.25', '0.5', '0.75', '0.8'], ans: 2, exp: '3 chia 4 bằng 0.75.' },
+
+    { id: 6, khoi: '6', mon: 'van', de: 'Tác giả của tác phẩm "Dế Mèn phiêu lưu ký" là ai?', options: ['Nam Cao', 'Tô Hoài', 'Nguyễn Du', 'Xuân Quỳnh'], ans: 1, exp: '"Dế Mèn phiêu lưu ký" là tác phẩm thiếu nhi nổi tiếng của nhà văn Tô Hoài.' },
+    { id: 7, khoi: '6', mon: 'van', de: 'Truyền thuyết "Thánh Gióng" phản ánh ước mơ gì của nhân dân ta thời cổ?', options: ['Ước mơ chinh phục thiên nhiên', 'Ước mơ về người anh hùng đánh giặc cứu nước', 'Ước mơ giàu sang', 'Ước mơ về sự trường thọ'], ans: 1, exp: 'Hình tượng Thánh Gióng biểu trưng cho tinh thần đoàn kết chống giặc ngoại xâm.' },
+    { id: 8, khoi: '6', mon: 'van', de: 'Từ nào sau đây là từ mượn tiếng Hán?', options: ['Sơn hà', 'Nhà cửa', 'Sông núi', 'Cây cối'], ans: 0, exp: '"Sơn hà" là từ Hán Việt đồng nghĩa với sông núi.' },
+    { id: 9, khoi: '6', mon: 'van', de: 'Biện pháp tu từ nào được dùng trong câu: "Mặt trời như một quả cầu lửa khổng lồ"?', options: ['Nhân hóa', 'So sánh', 'Ẩn dụ', 'Hoán dụ'], ans: 1, exp: 'Từ so sánh "như" dùng để đối chiếu mặt trời với quả cầu lửa.' },
+    { id: 10, khoi: '6', mon: 'van', de: 'Chi tiết "bọc trăm trứng" trong truyện "Con Rồng cháu Tiên" giải thích nguồn gốc của:', options: ['Các loài vật', 'Các con sông', 'Các dân tộc anh em trên đất nước Việt Nam', 'Nghề trồng lúa nước'], ans: 2, exp: 'Chi tiết này giải thích nguồn gốc đồng bào của các dân tộc Việt Nam.' },
+
+    { id: 11, khoi: '6', mon: 'anh', de: 'She _______ to school by bicycle every day.', options: ['go', 'goes', 'going', 'went'], ans: 1, exp: 'Hiện tại đơn với chủ ngữ ngôi thứ 3 số ít (She): động từ thêm -es (goes).' },
+    { id: 12, khoi: '6', mon: 'anh', de: 'There _______ a big table and four chairs in the living room.', options: ['is', 'are', 'be', 'were'], ans: 0, exp: 'Cấu trúc "There is" đứng trước danh từ đếm được số ít ("a big table").' },
+    { id: 13, khoi: '6', mon: 'anh', de: 'What time do you usually _______ breakfast?', options: ['have', 'do', 'make', 'cook'], ans: 0, exp: 'Cụm từ cố định: "have breakfast" (ăn sáng).' },
+    { id: 14, khoi: '6', mon: 'anh', de: 'My brother is very _______. He likes playing football and swimming.', options: ['shy', 'sporty', 'lazy', 'quiet'], ans: 1, exp: '"Sporty" nghĩa là yêu thích thể thao, năng động.' },
+    { id: 15, khoi: '6', mon: 'anh', de: 'Ha Long Bay is famous _______ its beautiful islands.', options: ['at', 'on', 'for', 'in'], ans: 2, exp: 'Cụm tính từ đi với giới từ: "famous for" (nổi tiếng vì cái gì).' },
+
+    { id: 16, khoi: '6', mon: 'khtn', de: 'Bào quan nào được ví như "nhà máy năng lượng" của tế bào?', options: ['Nhân tế bào', 'Ti thể', 'Không bào', 'Lục lạp'], ans: 1, exp: 'Ti thể là nơi diễn ra hô hấp tế bào giải phóng năng lượng ATP.' },
+    { id: 17, khoi: '6', mon: 'khtn', de: 'Khí nào chiếm thể tích lớn nhất trong thành phần của không khí?', options: ['Khí Oxi', 'Khí Nitơ', 'Khí Cacbonic', 'Khí Argon'], ans: 1, exp: 'Khí Nitơ (N2) chiếm khoảng 78% thể tích không khí.' },
+    { id: 18, khoi: '6', mon: 'khtn', de: 'Đơn vị đo khối lượng chuẩn trong hệ đơn vị quốc tế SI là:', options: ['Gam (g)', 'Kilôgam (kg)', 'Tấn (t)', 'Miligam (mg)'], ans: 1, exp: 'Kilôgam (kg) là đơn vị đo khối lượng cơ bản trong hệ SI.' },
+    { id: 19, khoi: '6', mon: 'khtn', de: 'Quá trình chuyển từ thể rắn sang thể lỏng của một chất được gọi là:', options: ['Sự bay hơi', 'Sự ngưng tụ', 'Sự nóng chảy', 'Sự đông đặc'], ans: 2, exp: 'Chất rắn chuyển thành chất lỏng gọi là sự nóng chảy.' },
+    { id: 20, khoi: '6', mon: 'khtn', de: 'Vật nào sau đây là vật thể nhân tạo?', options: ['Dòng sông', 'Ngọn núi', 'Cây cầu', 'Cây thông'], ans: 2, exp: 'Cây cầu do con người xây dựng nên là vật thể nhân tạo.' },
+
+    { id: 21, khoi: '6', mon: 'su-dia', de: 'Chiến thắng Bạch Đằng năm 938 do ai trực tiếp lãnh đạo?', options: ['Đinh Bộ Lĩnh', 'Lý Thường Kiệt', 'Ngô Quyền', 'Trần Hưng Đạo'], ans: 2, exp: 'Ngô Quyền lãnh đạo nhân dân đánh tan quân Nam Hán trên sông Bạch Đằng năm 938.' },
+    { id: 22, khoi: '6', mon: 'su-dia', de: 'Trái Đất chuyển động tự quay quanh trục theo hướng nào?', options: ['Từ Đông sang Tây', 'Từ Tây sang Đông', 'Từ Bắc xuống Nam', 'Từ Nam lên Bắc'], ans: 1, exp: 'Trái Đất tự quay quanh trục từ Tây sang Đông.' },
+    { id: 23, khoi: '6', mon: 'su-dia', de: 'Nhà nước đầu tiên trong lịch sử Việt Nam có tên gọi là gì?', options: ['Âu Lạc', 'Văn Lang', 'Đại Cồ Việt', 'Vạn Xuân'], ans: 1, exp: 'Nhà nước Văn Lang do các vua Hùng đứng đầu là nhà nước đầu tiên của nước ta.' },
+    { id: 24, khoi: '6', mon: 'su-dia', de: 'Vĩ tuyến lớn nhất chia quả Địa Cầu thành hai bán cầu Bắc và Nam là:', options: ['Đường chí tuyến Bắc', 'Đường Xích đạo', 'Kinh tuyến gốc', 'Đường chí tuyến Nam'], ans: 1, exp: 'Xích đạo (vĩ tuyến 0°) chia Trái Đất thành bán cầu Bắc và bán cầu Nam.' },
+    { id: 25, khoi: '6', mon: 'su-dia', de: 'Người tối cổ xuất hiện đầu tiên trên thế giới ở châu lục nào?', options: ['Châu Á', 'Châu Âu', 'Châu Phi', 'Châu Mỹ'], ans: 2, exp: 'Các dấu tích hóa thạch cổ xưa nhất chứng minh loài người bắt nguồn từ châu Phi.' },
+
+    { id: 26, khoi: '6', mon: 'tin', de: '1 Byte tương đương với bao nhiêu bit?', options: ['4 bit', '8 bit', '16 bit', '32 bit'], ans: 1, exp: '1 Byte bằng 8 bit trong hệ thống lưu trữ thông tin số.' },
+    { id: 27, khoi: '6', mon: 'tin', de: 'Thiết bị nào sau đây là thiết bị vào (Input Device) của máy tính?', options: ['Màn hình', 'Máy in', 'Bàn phím', 'Loa'], ans: 2, exp: 'Bàn phím nhập dữ liệu ký tự vào máy tính nên là thiết bị vào.' },
+    { id: 28, khoi: '6', mon: 'tin', de: 'Tổ hợp phím nào dùng để lưu văn bản đang làm việc?', options: ['Ctrl + C', 'Ctrl + V', 'Ctrl + S', 'Ctrl + Z'], ans: 2, exp: 'Ctrl + S (Save) là phím tắt lưu tệp.' },
+    { id: 29, khoi: '6', mon: 'tin', de: 'Mạng máy tính gồm có những thành phần cơ bản nào?', options: ['Chỉ có các máy tính', 'Thiết bị đầu cuối, thiết bị kết nối và phần mềm mạng', 'Chỉ có dây cáp mạng', 'Chỉ có bộ phát Wifi'], ans: 1, exp: 'Mạng máy tính gồm thiết bị đầu cuối, thiết bị kết nối và phần mềm mạng.' },
+    { id: 30, khoi: '6', mon: 'tin', de: 'Hành vi nào sau đây là an toàn thông tin khi dùng mạng xã hội?', options: ['Đặt mật khẩu dễ đoán 123456', 'Chia sẻ mật khẩu cho bạn bè', 'Đặt mật khẩu mạnh và không chia sẻ cho ai', 'Bấm vào các liên kết lạ trúng thưởng'], ans: 2, exp: 'Mật khẩu mạnh bảo vệ an toàn cho tài khoản cá nhân.' },
+
+    { id: 31, khoi: '6', mon: 'cong-nghe', de: 'Phương pháp bảo quản thực phẩm phổ biến nhất trong gia đình hiện nay là:', options: ['Ngâm nước lạnh', 'Bảo quản lạnh trong tủ lạnh', 'Để ở nơi thoáng mát', 'Phơi nắng'], ans: 1, exp: 'Nhiệt độ thấp trong tủ lạnh ức chế vi sinh vật gây ôi thiu.' },
+    { id: 32, khoi: '6', mon: 'cong-nghe', de: 'Trang phục bằng vải sợi bông (cotton) có đặc điểm nổi bật nào?', options: ['Mặc bí bách, không thấm mồ hôi', 'Thấm hút mồ hôi tốt, mặc thoáng mát', 'Không bao giờ bị nhàu', 'Dễ cháy và có mùi khét như nhựa'], ans: 1, exp: 'Vải cotton có nguồn gốc tự nhiên, thấm mồ hôi tốt và thoáng mát.' },
+    { id: 33, khoi: '6', mon: 'cong-nghe', de: 'Ngôi nhà thông minh (Smart Home) có đặc điểm nào dưới đây?', options: ['Chỉ xây bằng gỗ', 'Hệ thống thiết bị được điều khiển tự động hoặc từ xa', 'Không sử dụng điện năng', 'Không có cửa sổ'], ans: 1, exp: 'Nhà thông minh tích hợp cảm biến và điều khiển từ xa qua smartphone/internet.' },
+    { id: 34, khoi: '6', mon: 'cong-nghe', de: 'Bữa ăn hợp lý là bữa ăn đảm bảo đủ bao nhiêu nhóm chất dinh dưỡng chính?', options: ['2 nhóm', '3 nhóm', '4 nhóm', '6 nhóm'], ans: 2, exp: '4 nhóm chính gồm: chất đạm, chất béo, chất bột đường, vitamin và khoáng chất.' },
+    { id: 35, khoi: '6', mon: 'cong-nghe', de: 'Để tiết kiệm điện năng trong gia đình, chúng ta nên làm gì?', options: ['Bật đèn cả ngày lẫn đêm', 'Tắt các thiết bị điện khi không sử dụng', 'Mở tủ lạnh liên tục', 'Bật máy điều hòa nhiệt độ cực thấp'], ans: 1, exp: 'Tắt thiết bị khi không dùng là nguyên tắc cơ bản tiết kiệm điện.' },
+
+    { id: 36, khoi: '6', mon: 'gdcd', de: 'Hành vi nào sau đây thể hiện tính tự lập của học sinh?', options: ['Nhờ bạn chép bài hộ', 'Tự giác hoàn thành bài tập về nhà', 'Đợi cha mẹ nhắc mới chịu học bài', 'Sao chép bài thi của bạn'], ans: 1, exp: 'Tự lập là chủ động làm việc của bản thân mà không dựa dẫm.' },
+    { id: 37, khoi: '6', mon: 'gdcd', de: 'Người biết tôn trọng sự thật là người như thế nào?', options: ['Luôn nói dối để được lòng người khác', 'Dám bảo vệ lẽ phải và thừa nhận khuyết điểm', 'Nói sai sự thật vì quyền lợi cá nhân', 'Bao che cho hành vi xấu'], ans: 1, exp: 'Tôn trọng sự thật là bảo vệ lẽ phải và chân thực trong lời nói, hành động.' },
+    { id: 38, khoi: '6', mon: 'gdcd', de: 'Câu tục ngữ "Thương người như thể thương thân" nói về truyền thống đạo đức nào?', options: ['Yêu thương con người', 'Tiết kiệm', 'Dũng cảm', 'Tôn sư trọng đạo'], ans: 0, exp: 'Câu tục ngữ nhắc nhở tình yêu thương và sẻ chia giữa người với người.' },
+    { id: 39, khoi: '6', mon: 'gdcd', de: 'Biểu hiện nào sau đây là tiết kiệm thời gian?', options: ['Vừa học vừa chơi game', 'Lập kế hoạch làm việc khoa học và thực hiện đúng', 'Ngủ nướng cả ngày', 'Lướt mạng xã hội liên tục nhiều giờ'], ans: 1, exp: 'Lập kế hoạch và tuân thủ giúp sử dụng thời gian hiệu quả nhất.' },
+    { id: 40, khoi: '6', mon: 'gdcd', de: 'Công dân nước Cộng hòa xã hội chủ nghĩa Việt Nam là người:', options: ['Sinh sống tại Việt Nam', 'Có quốc tịch Việt Nam', 'Có việc làm tại Việt Nam', 'Nói tiếng Việt'], ans: 1, exp: 'Căn cứ Luật Quốc tịch: Công dân Việt Nam là người có quốc tịch Việt Nam.' },
+
+    // KHỐI 7
+    { id: 41, khoi: '7', mon: 'toan', de: 'Căn bậc hai số học của 81 là bao nhiêu?', options: ['9', '-9', '±9', '18'], ans: 0, exp: 'Căn bậc hai số học của số không âm a là số dương x sao cho x² = a. Do đó √81 = 9.' },
+    { id: 42, khoi: '7', mon: 'toan', de: 'Tổng số đo 3 góc trong một tam giác bằng bao nhiêu độ?', options: ['90°', '180°', '360°', '270°'], ans: 1, exp: 'Định lý: Tổng ba góc của một tam giác luôn bằng 180°.' },
+    { id: 43, khoi: '7', mon: 'toan', de: 'Tập hợp các số hữu tỉ được kí hiệu bằng chữ cái nào?', options: ['N', 'Z', 'Q', 'R'], ans: 2, exp: 'Tập hợp số hữu tỉ được kí hiệu là Q.' },
+    { id: 44, khoi: '7', mon: 'toan', de: 'Hai góc đối đỉnh thì có tính chất nào sau đây?', options: ['Có tổng bằng 180°', 'Bằng nhau', 'Có tổng bằng 90°', 'Phụ nhau'], ans: 1, exp: 'Định lý: Hai góc đối đỉnh thì bằng nhau.' },
+    { id: 45, khoi: '7', mon: 'toan', de: 'Số đối của số hữu tỉ -3/5 là:', options: ['3/5', '-5/3', '5/3', '-3/5'], ans: 0, exp: 'Số đối của -a là a, do đó số đối của -3/5 là 3/5.' },
+
+    { id: 46, khoi: '7', mon: 'van', de: 'Thành ngữ "Uống nước nhớ nguồn" khuyên dạy con người điều gì?', options: ['Lòng dũng cảm', 'Lòng biết ơn', 'Tính tiết kiệm', 'Tính kiên trì'], ans: 1, exp: 'Thành ngữ răn dạy lòng biết ơn đối với thế hệ đi trước.' },
+    { id: 47, khoi: '7', mon: 'van', de: 'Từ nào sau đây là từ láy tượng thanh?', options: ['Nhà cửa', 'Róc rách', 'Xanh ngắt', 'Đỏ hoe'], ans: 1, exp: '"Róc rách" mô phỏng âm thanh dòng nước róc rách chảy.' },
+    { id: 48, khoi: '7', mon: 'van', de: 'Tục ngữ là thể loại văn học dân gian đúc kết điều gì của nhân dân lao động?', options: ['Những câu chuyện thần thoại', 'Kinh nghiệm sống và sản xuất', 'Những ước mơ viển vông', 'Những bài ca chiến trận'], ans: 1, exp: 'Tục ngữ là kho tàng đúc kết kinh nghiệm quý báu về tự nhiên và xã hội.' },
+    { id: 49, khoi: '7', mon: 'van', de: 'Văn bản "Sự giàu đẹp của tiếng Việt" thuộc thể loại văn học nào?', options: ['Truyện ngắn', 'Nghị luận', 'Thơ lục bát', 'Kịch'], ans: 1, exp: 'Văn bản của Đặng Thai Mai thuộc thể văn nghị luận giải thích, chứng minh.' },
+    { id: 50, khoi: '7', mon: 'van', de: 'Trong câu: "Mẹ đang nấu cơm trong bếp", trạng ngữ chỉ địa điểm là:', options: ['Mẹ', 'Đang nấu', 'Cơm', 'Trong bếp'], ans: 3, exp: '"Trong bếp" là trạng ngữ chỉ nơi chốn, địa điểm.' },
+
+    { id: 51, khoi: '7', mon: 'anh', de: 'What is the opposite of the word "interesting"?', options: ['exciting', 'boring', 'funny', 'difficult'], ans: 1, exp: 'Trái nghĩa của "interesting" (thú vị) là "boring" (nhàm chán).' },
+    { id: 52, khoi: '7', mon: 'anh', de: 'This book is _______ than that one.', options: ['good', 'better', 'best', 'more good'], ans: 1, exp: 'So sánh hơn của tính từ bất quy tắc "good" là "better".' },
+    { id: 53, khoi: '7', mon: 'anh', de: 'You should eat more fruits and vegetables _______ they are good for your health.', options: ['because', 'although', 'so', 'but'], ans: 0, exp: 'Liên từ "because" chỉ nguyên nhân lý do (bởi vì).' },
+    { id: 54, khoi: '7', mon: 'anh', de: 'Hoa often _______ stamps in her free time.', options: ['collects', 'collect', 'collecting', 'collected'], ans: 0, exp: 'Thì hiện tại đơn diễn tả thói quen, chủ ngữ "Hoa" (ngôi 3 số ít) động từ thêm -s.' },
+    { id: 55, khoi: '7', mon: 'anh', de: 'Traffic accidents can be prevented if people obey the traffic _______.', options: ['lights', 'rules', 'jams', 'signs'], ans: 1, exp: 'Cụm từ "traffic rules" nghĩa là luật giao thông.' },
+
+    { id: 56, khoi: '7', mon: 'khtn', de: 'Nước có công thức hóa học là gì?', options: ['CO2', 'H2O', 'O2', 'NaCl'], ans: 1, exp: 'Phân tử nước tạo bởi 2 nguyên tử H và 1 nguyên tử O (H2O).' },
+    { id: 57, khoi: '7', mon: 'khtn', de: 'Nguyên tử trung hòa về điện gồm có các loại hạt nào?', options: ['Proton và nơtron', 'Proton và electron', 'Proton, nơtron và electron', 'Electron và nơtron'], ans: 2, exp: 'Nguyên tử gồm hạt nhân (proton, nơtron) và vỏ electron mang điện âm.' },
+    { id: 58, khoi: '7', mon: 'khtn', de: 'Vận tốc là đại lượng đặc trưng cho điều gì của chuyển động?', options: ['Quãng đường dài hay ngắn', 'Sự nhanh hay chậm của chuyển động', 'Thời gian chuyển động', 'Khối lượng của vật'], ans: 1, exp: 'Vận tốc đặc trưng cho mức độ nhanh hay chậm của chuyển động.' },
+    { id: 59, khoi: '7', mon: 'khtn', de: 'Cơ quan quang hợp chủ yếu của cây xanh là:', options: ['Rễ cây', 'Thân cây', 'Lá cây', 'Hoa'], ans: 2, exp: 'Lá cây chứa nhiều lục lạp là bào quan chính thu nhận ánh sáng để quang hợp.' },
+    { id: 60, khoi: '7', mon: 'khtn', de: 'Kí hiệu hóa học của nguyên tố Oxi là:', options: ['O', 'Ox', 'O2', 'H'], ans: 0, exp: 'Kí hiệu hóa học của nguyên tố Oxi là O.' },
+
+    { id: 61, khoi: '7', mon: 'su-dia', de: 'Vị vua nào đã đặt tên nước ta là Đại Cồ Việt và định đô ở Hoa Lư?', options: ['Lý Thái Tổ', 'Lê Hoàn', 'Đinh Tiên Hoàng', 'Ngô Quyền'], ans: 2, exp: 'Đinh Bộ Lĩnh sau khi dẹp loạn 12 sứ quân năm 968 đã lên ngôi Hoàng đế, đặt tên nước là Đại Cồ Việt.' },
+    { id: 62, khoi: '7', mon: 'su-dia', de: 'Châu lục nào có diện tích lớn nhất trên Trái Đất?', options: ['Châu Phi', 'Châu Mỹ', 'Châu Á', 'Châu Âu'], ans: 2, exp: 'Châu Á có diện tích lớn nhất thế giới.' },
+    { id: 63, khoi: '7', mon: 'su-dia', de: 'Ai là người sáng lập ra nhà Lý vào năm 1009?', options: ['Lý Thường Kiệt', 'Lý Công Uẩn', 'Lý Nam Đế', 'Lý Thánh Tông'], ans: 1, exp: 'Lý Công Uẩn (Lý Thái Tổ) lập ra triều Lý năm 1009.' },
+    { id: 64, khoi: '7', mon: 'su-dia', de: 'Rừng nhiệt đới Amazon nằm ở châu lục nào?', options: ['Châu Phi', 'Châu Nam Cực', 'Châu Nam Mỹ', 'Châu Âu'], ans: 2, exp: 'Lòng chảo Amazon nằm chủ yếu ở Nam Mỹ.' },
+    { id: 65, khoi: '7', mon: 'su-dia', de: 'Bài thơ "Nam quốc sơn hà" vang lên bên bờ sông Như Nguyệt gắn liền với tên tuổi của vị anh hùng nào?', options: ['Trần Hưng Đạo', 'Lý Thường Kiệt', 'Quang Trung', 'Lê Lợi'], ans: 1, exp: 'Lý Thường Kiệt ngâm thơ bài "Nam quốc sơn hà" trong cuộc kháng chiến chống Tống (1077).' },
+
+    { id: 66, khoi: '7', mon: 'tin', de: 'Phần mở rộng nào sau đây là của tệp trình chiếu Microsoft PowerPoint?', options: ['.docx', '.xlsx', '.pptx', '.txt'], ans: 2, exp: '.pptx là phần mở rộng chuẩn của tệp PowerPoint.' },
+    { id: 67, khoi: '7', mon: 'tin', de: 'Hàm nào trong bảng tính Excel dùng để tính tổng các giá trị số?', options: ['AVERAGE', 'SUM', 'MAX', 'COUNT'], ans: 1, exp: 'Hàm SUM dùng để tính tổng dãy số.' },
+    { id: 68, khoi: '7', mon: 'tin', de: 'Địa chỉ ô tính trong bảng tính điện tử được xác định bởi:', options: ['Tên hàng trước, tên cột sau', 'Tên cột trước, tên hàng sau', 'Chỉ tên cột', 'Chỉ tên hàng'], ans: 1, exp: 'Tên cột ghép với tên hàng, ví dụ: A1, B5.' },
+    { id: 69, khoi: '7', mon: 'tin', de: 'Thiết bị nào sau đây dùng để lưu trữ dữ liệu ngoài máy tính?', options: ['RAM', 'CPU', 'Ổ USB di động', 'Bộ nguồn'], ans: 2, exp: 'USB flash drive là thiết bị nhớ lưu trữ ngoài tiện dụng.' },
+    { id: 70, khoi: '7', mon: 'tin', de: 'Hành động nào vi phạm pháp luật khi sử dụng mạng xã hội?', options: ['Đăng bài học tập tích cực', 'Xúc phạm danh dự và lan truyền tin giả về người khác', 'Xem video khoa học bổ ích', 'Giao lưu học hỏi bạn bè'], ans: 1, exp: 'Xúc phạm danh dự người khác bị xử lý nghiêm minh theo Luật An ninh mạng.' },
+
+    { id: 71, khoi: '7', mon: 'cong-nghe', de: 'Cây lúa nước thuộc nhóm cây trồng nào sau đây?', options: ['Cây ăn quả', 'Cây lương thực', 'Cây công nghiệp', 'Cây lấy gỗ'], ans: 1, exp: 'Lúa là cây lương thực chính cung cấp tinh bột.' },
+    { id: 72, khoi: '7', mon: 'cong-nghe', de: 'Biện pháp nào sau đây giúp cải tạo độ phì nhiêu của đất trồng hiệu quả và an toàn?', options: ['Phun thuốc trừ sâu liên tục', 'Bón nhiều phân bón hữu cơ', 'Đốt sạch tàn dư rơm rạ', 'Bỏ hoang đất lâu năm'], ans: 1, exp: 'Bón phân hữu cơ bổ sung mùn và vi sinh vật có ích cho đất.' },
+    { id: 73, khoi: '7', mon: 'cong-nghe', de: 'Phương pháp tưới nào giúp tiết kiệm nguồn nước nhất cho cây trồng?', options: ['Tưới tràn', 'Tưới nhỏ giọt', 'Tưới rãnh', 'Tưới ngập'], ans: 1, exp: 'Tưới nhỏ giọt đưa nước trực tiếp vào gốc rễ, giảm thiểu tối đa bay hơi.' },
+    { id: 74, khoi: '7', mon: 'cong-nghe', de: 'Rừng ngập mặn ở nước ta thuộc loại rừng nào sau đây?', options: ['Rừng phòng hộ', 'Rừng sản xuất', 'Rừng đặc dụng', 'Rừng công nghiệp'], ans: 0, exp: 'Rừng ngập mặn ven biển đóng vai trò chắn sóng, phòng hộ đê biển.' },
+    { id: 75, khoi: '7', mon: 'cong-nghe', de: 'Thủy sản nào sau đây thuộc nhóm cá nước ngọt phổ biến ở miền Bắc?', options: ['Cá chép', 'Cá thu', 'Cá nục', 'Cá chim biển'], ans: 0, exp: 'Cá chép sống ở ao, hồ, sông nước ngọt nội địa.' },
+
+    { id: 76, khoi: '7', mon: 'gdcd', de: 'Người có lòng tự trọng là người như thế nào?', options: ['Luôn cho rằng mình hoàn hảo hơn người khác', 'Biết giữ gìn danh dự và phẩm giá của bản thân', 'Không chịu tiếp thu ý kiến của tập thể', 'Tự cao tự đại'], ans: 1, exp: 'Tự trọng là biết coi trọng phẩm cách và danh dự cá nhân.' },
+    { id: 77, khoi: '7', mon: 'gdcd', de: 'Theo quy định của Luật Trẻ em Việt Nam, trẻ em là người dưới bao nhiêu tuổi?', options: ['Dưới 14 tuổi', 'Dưới 16 tuổi', 'Dưới 18 tuổi', 'Dưới 15 tuổi'], ans: 1, exp: 'Điều 1 Luật Trẻ em 2016 quy định: Trẻ em là người dưới 16 tuổi.' },
+    { id: 78, khoi: '7', mon: 'gdcd', de: 'Khi phát hiện hành vi bạo lực học đường, em nên làm gì?', options: ['Đứng xem và quay video đăng lên mạng', 'Báo ngay cho thầy cô giáo hoặc người lớn có trách nhiệm', 'Tham gia cổ vũ đánh nhau', 'Bỏ chạy làm ngơ'], ans: 1, exp: 'Báo cho thầy cô là cách ứng xử kịp thời ngăn chặn bạo lực.' },
+    { id: 79, khoi: '7', mon: 'gdcd', de: 'Di sản nào sau đây là di sản văn hóa phi vật thể của Việt Nam được UNESCO công nhận?', options: ['Cố đô Huế', 'Vịnh Hạ Long', 'Nhã nhạc cung đình Huế', 'Phố cổ Hội An'], ans: 2, exp: 'Nhã nhạc cung đình Huế là di sản văn hóa phi vật thể đại diện của nhân loại.' },
+    { id: 80, khoi: '7', mon: 'gdcd', de: 'Mục đích cao đẹp của việc học tập là gì?', options: ['Để kiếm nhiều tiền bằng mọi giá', 'Nâng cao hiểu biết để xây dựng quê hương, đất nước', 'Để hơn thua với bạn bè', 'Chỉ để lấy bằng khen'], ans: 1, exp: 'Học tập nhằm làm chủ tri thức và trở thành người có ích cho xã hội.' },
+
+    // KHỐI 8
+    { id: 81, khoi: '8', mon: 'toan', de: 'Khai triển của hằng đẳng thức (a + b)² là:', options: ['a² + b²', 'a² + 2ab + b²', 'a² - 2ab + b²', 'a² + ab + b²'], ans: 1, exp: '(a + b)² = a² + 2ab + b² (Bình phương của một tổng).' },
+    { id: 82, khoi: '8', mon: 'toan', de: 'Tứ giác có bốn góc vuông là hình gì?', options: ['Hình thoi', 'Hình thang cân', 'Hình chữ nhật', 'Hình bình hành'], ans: 2, exp: 'Hình chữ nhật là tứ giác có 4 góc vuông.' },
+    { id: 83, khoi: '8', mon: 'toan', de: 'Đa thức x² - 9 được phân tích thành nhân tử là:', options: ['(x - 3)²', '(x + 3)²', '(x - 3)(x + 3)', '(x - 9)(x + 9)'], ans: 2, exp: 'Áp dụng hiệu hai bình phương: x² - 3² = (x - 3)(x + 3).' },
+    { id: 84, khoi: '8', mon: 'toan', de: 'Hình chóp tam giác đều có mặt đáy là hình gì?', options: ['Tam giác vuông', 'Tam giác cân', 'Tam giác đều', 'Hình vuông'], ans: 2, exp: 'Hình chóp tam giác đều có đáy là một tam giác đều.' },
+    { id: 85, khoi: '8', mon: 'toan', de: 'Tổng số đo các góc trong một tứ giác bằng:', options: ['180°', '360°', '270°', '540°'], ans: 1, exp: 'Định lý: Tổng các góc trong một tứ giác luôn bằng 360°.' },
+
+    { id: 86, khoi: '8', mon: 'van', de: 'Biện pháp tu từ nào được dùng trong câu: "Bác đã đi rồi sao, Bác ơi!"?', options: ['Nhân hóa', 'Nói giảm nói tránh', 'Ẩn dụ', 'So sánh'], ans: 1, exp: 'Từ "đi rồi" dùng để thay thế cho cái chết nhằm giảm bớt sự xót xa đau buồn.' },
+    { id: 87, khoi: '8', mon: 'van', de: 'Văn bản "Chiếu dời đô" do vị vua nào ban bố vào năm 1010?', options: ['Lý Công Uẩn', 'Trần Hưng Đạo', 'Nguyễn Trãi', 'Quang Trung'], ans: 0, exp: 'Vua Lý Thái Tổ viết Chiếu dời đô dời đô từ Hoa Lư về Thăng Long.' },
+    { id: 88, khoi: '8', mon: 'van', de: 'Truyện ngắn "Lão Hạc" của nhà văn Nam Cao phản ánh cuộc sống của tầng lớp nào?', options: ['Giai cấp tư sản', 'Người nông dân nghèo trước Cách mạng', 'Tầng lớp quan lại phong kiến', 'Tầng lớp thị dân thành thị'], ans: 1, exp: 'Tác phẩm phản ánh số phận đau thương của người nông dân nghèo trước 1945.' },
+    { id: 89, khoi: '8', mon: 'van', de: 'Câu nghi vấn trong tiếng Việt có chức năng chính dùng để làm gì?', options: ['Để kể chuyện', 'Để hỏi', 'Để yêu cầu, ra lệnh', 'Để bộc lộ cảm xúc'], ans: 1, exp: 'Chức năng cơ bản và chính yếu của câu nghi vấn là dùng để hỏi.' },
+    { id: 90, khoi: '8', mon: 'van', de: 'Tác giả của bài thơ tráng chí "Hịch tướng sĩ" là:', options: ['Trần Quốc Tuấn', 'Trần Nhân Tông', 'Phạm Ngũ Lão', 'Trương Hán Siêu'], ans: 0, exp: 'Hưng Đạo Đại Vương Trần Quốc Tuấn viết bài Hịch khích lệ tinh thần binh sĩ chống Mông - Nguyên.' },
+
+    { id: 91, khoi: '8', mon: 'anh', de: 'My father was born _______ October 10th.', options: ['in', 'at', 'on', 'by'], ans: 2, exp: 'Dùng giới từ "on" trước ngày tháng cụ thể trong năm.' },
+    { id: 92, khoi: '8', mon: 'anh', de: 'If we cut down more trees, there _______ more floods.', options: ['are', 'will be', 'were', 'have been'], ans: 1, exp: 'Câu điều kiện loại 1: "If + S + V(hiện tại), S + will + V".' },
+    { id: 93, khoi: '8', mon: 'anh', de: 'The Internet is a wonderful invention of _______ life.', options: ['modern', 'ancient', 'old', 'historic'], ans: 0, exp: '"Modern life" nghĩa là cuộc sống hiện đại.' },
+    { id: 94, khoi: '8', mon: 'anh', de: 'She asked me where I _______ from.', options: ['come', 'came', 'coming', 'have come'], ans: 1, exp: 'Câu tường thuật gián tiếp lùi thì từ Hiện tại đơn về Quá khứ đơn (came).' },
+    { id: 95, khoi: '8', mon: 'anh', de: 'People in the countryside often live _______ than people in cities.', options: ['more peacefully', 'peacefully', 'most peacefully', 'as peacefully'], ans: 0, exp: 'So sánh hơn của trạng từ nhiều âm tiết: "more + adv + than".' },
+
+    { id: 96, khoi: '8', mon: 'khtn', de: 'Đơn vị đo cường độ dòng điện trong hệ SI là gì?', options: ['Vôn (V)', 'Ampe (A)', 'Oát (W)', 'Jun (J)'], ans: 1, exp: 'Ampe (ký hiệu A) là đơn vị đo cường độ dòng điện.' },
+    { id: 97, khoi: '8', mon: 'khtn', de: 'Hiện tượng nào sau đây là hiện tượng biến đổi hóa học?', options: ['Nước đá tan thành nước lỏng', 'Đinh sắt để ngoài không khí ẩm bị gỉ', 'Hòa tan muối ăn vào nước', 'Thủy tinh bị đập vỡ vụn'], ans: 1, exp: 'Sắt bị gỉ tạo ra chất mới là oxit sắt (rỉ sắt).' },
+    { id: 98, khoi: '8', mon: 'khtn', de: 'Khối lượng riêng của một chất được xác định bằng công thức nào?', options: ['D = m / V', 'D = m . V', 'D = V / m', 'D = P . V'], ans: 0, exp: 'Khối lượng riêng D = khối lượng m chia thể tích V.' },
+    { id: 99, khoi: '8', mon: 'khtn', de: 'Hệ cơ quan nào trong cơ thể người có nhiệm vụ vận chuyển máu và chất dinh dưỡng?', options: ['Hệ tiêu hóa', 'Hệ tuần hoàn', 'Hệ bài tiết', 'Hệ thần kinh'], ans: 1, exp: 'Hệ tuần hoàn gồm tim và mạch máu vận chuyển dưỡng chất nuôi cơ thể.' },
+    { id: 100, khoi: '8', mon: 'khtn', de: 'Dung dịch có độ pH = 3 được xem là môi trường:', options: ['Axit', 'Bazơ', 'Trung tính', 'Muối'], ans: 0, exp: 'Dung dịch có pH < 7 là môi trường axit.' },
+
+    { id: 101, khoi: '8', mon: 'su-dia', de: 'Đường bờ biển của Việt Nam có chiều dài khoảng bao nhiêu km?', options: ['2360 km', '3260 km', '4260 km', '1650 km'], ans: 1, exp: 'Đường bờ biển nước ta dài khoảng 3260 km từ Móng Cái đến Hà Tiên.' },
+    { id: 102, khoi: '8', mon: 'su-dia', de: 'Đỉnh núi Fansipan – nóc nhà của Đông Dương có độ cao bao nhiêu mét?', options: ['3143 m', '2800 m', '3500 m', '2950 m'], ans: 0, exp: 'Fansipan cao 3143 mét so với mực nước biển.' },
+    { id: 103, khoi: '8', mon: 'su-dia', de: 'Cuộc khởi nghĩa Lam Sơn (1418 - 1427) chống lại quân xâm lược nào?', options: ['Quân Tống', 'Quân Minh', 'Quân Thanh', 'Quân Nam Hán'], ans: 1, exp: 'Lê Lợi cùng nghĩa quân Lam Sơn đứng lên đánh đuổi giặc Minh.' },
+    { id: 104, khoi: '8', mon: 'su-dia', de: 'Gió mùa mùa hạ hoạt động ở nước ta chủ yếu thổi theo hướng nào?', options: ['Đông Bắc', 'Tây Nam', 'Đông Nam', 'Tây Bắc'], ans: 1, exp: 'Gió mùa mùa hạ mang lại mưa lớn thổi chủ yếu theo hướng Tây Nam.' },
+    { id: 105, khoi: '8', mon: 'su-dia', de: 'Vua Quang Trung đại phá 29 vạn quân Mãn Thanh vào mùa xuân năm nào?', options: ['1786', '1789', '1792', '1802'], ans: 1, exp: 'Chiến thắng Ngọc Hồi - Đống Đa diễn ra vào mùa xuân Kỷ Dậu (1789).' },
+
+    { id: 106, khoi: '8', mon: 'tin', de: 'Trong ngôn ngữ lập trình, kiểu dữ liệu Integer dùng để lưu trữ:', options: ['Số nguyên', 'Số thực', 'Xâu ký tự', 'Ký tự đơn'], ans: 0, exp: 'Integer là kiểu dữ liệu số nguyên trong lập trình.' },
+    { id: 107, khoi: '8', mon: 'tin', de: 'Cấu trúc lặp trong thuật toán được dùng khi nào?', options: ['Khi cần rẽ nhánh điều kiện', 'Khi một công việc cần được lặp đi lặp lại nhiều lần', 'Chỉ dùng khi tính tổng', 'Khi kết thúc chương trình'], ans: 1, exp: 'Vòng lặp thực thi một khối lệnh lặp đi lặp lại theo điều kiện.' },
+    { id: 108, khoi: '8', mon: 'tin', de: 'Hành động nào giúp bảo vệ bản quyền phần mềm máy tính?', options: ['Sử dụng phần mềm lậu bẻ khóa', 'Mua bản quyền hoặc dùng phần mềm nguồn mở có giấy phép', 'Sao chép đĩa cài bán kiếm lời', 'Tải bản crack trên mạng'], ans: 1, exp: 'Tôn trọng bản quyền trí tuệ bằng cách mua bản quyền hoặc sử dụng mã nguồn mở chính thống.' },
+    { id: 109, khoi: '8', mon: 'tin', de: 'Dữ liệu trong bảng tính điện tử được sắp xếp theo thứ tự tăng dần là:', options: ['Từ lớn đến bé', 'Từ bé đến lớn', 'Ngẫu nhiên', 'Theo thời gian'], ans: 1, exp: 'Tăng dần là sắp xếp từ bé đến lớn.' },
+    { id: 110, khoi: '8', mon: 'tin', de: 'Thuật toán tìm kiếm nhị phân (Binary Search) yêu cầu danh sách đầu vào phải:', options: ['Có độ dài chẵn', 'Đã được sắp xếp thứ tự', 'Chỉ chứa số nguyên', 'Không có phần tử trùng lặp'], ans: 1, exp: 'Tìm kiếm nhị phân bắt buộc dãy dữ liệu phải được sắp xếp trước.' },
+
+    { id: 111, khoi: '8', mon: 'cong-nghe', de: 'Bản vẽ kĩ thuật được xây dựng chủ yếu bằng phương pháp chiếu nào?', options: ['Phép chiếu xuyên tâm', 'Phép chiếu song song', 'Phép chiếu vuông góc', 'Phép chiếu hội tụ'], ans: 2, exp: 'Phép chiếu vuông góc là phương pháp biểu diễn tiêu chuẩn trên bản vẽ kĩ thuật.' },
+    { id: 112, khoi: '8', mon: 'cong-nghe', de: 'Vật liệu cơ khí kim loại nào sau đây thuộc nhóm kim loại đen?', options: ['Đồng', 'Nhôm', 'Thép', 'Vàng'], ans: 2, exp: 'Kim loại đen chứa thành phần chính là sắt và cacbon (thép, gang).' },
+    { id: 113, khoi: '8', mon: 'cong-nghe', de: 'Dụng cụ nào dùng để đo kích thước đường kính trong và ngoài của chi tiết tròn?', options: ['Thước lá', 'Thước cặp', 'Thước góc', 'Com-pa'], ans: 1, exp: 'Thước cặp đo chính xác đường kính trong, ngoài và chiều sâu.' },
+    { id: 114, khoi: '8', mon: 'cong-nghe', de: 'Để đảm bảo an toàn điện, trước khi sửa chữa mạch điện chúng ta phải làm gì?', options: ['Đi chân đất', 'Ngắt nguồn điện (cầu dao, aptomat)', 'Dùng tay ướt chạm vào dây điện', 'Cắm thêm tải lớn'], ans: 1, exp: 'Ngắt nguồn điện là nguyên tắc an toàn số 1.' },
+    { id: 115, khoi: '8', mon: 'cong-nghe', de: 'Mối ghép bằng ren thuộc nhóm mối ghép nào?', options: ['Mối ghép cố định không tháo được', 'Mối ghép tháo được', 'Mối ghép hàn', 'Mối ghép đinh tán'], ans: 1, exp: 'Mối ghép ren có thể tháo lắp dễ dàng mà không làm hỏng chi tiết.' },
+
+    { id: 116, khoi: '8', mon: 'gdcd', de: 'Tôn trọng và học hỏi các dân tộc khác có ý nghĩa gì đối với đất nước?', options: ['Đánh mất bản sắc truyền thống', 'Tiếp thu tinh hoa văn hóa và tri thức để phát triển đất nước', 'Làm cho đất nước phụ thuộc vào nước ngoài', 'Không có tác dụng gì'], ans: 1, exp: 'Học hỏi có chọn lọc giúp tiếp thu tinh hoa nhân loại và làm giàu văn hóa dân tộc.' },
+    { id: 117, khoi: '8', mon: 'gdcd', de: 'Người có lối sống liêm khiết là người như thế nào?', options: ['Luôn tìm cách tư lợi cá nhân', 'Không hám danh lợi, không toan tính vụ lợi', 'Chỉ lo cho gia đình mình', 'Lợi dụng chức quyền nhận hối lộ'], ans: 1, exp: 'Liêm khiết là phẩm chất đạo đức không vụ lợi cá nhân.' },
+    { id: 118, khoi: '8', mon: 'gdcd', de: 'Quyền tự do ngôn luận của công dân phải được thực hiện:', options: ['Bất cứ điều gì kể cả vu khống người khác', 'Theo quy định của Hiến pháp và Pháp luật', 'Để nói xấu chính quyền', 'Ẩn danh trên mạng để chửi bới'], ans: 1, exp: 'Tự do ngôn luận phải nằm trong khuôn khổ pháp luật.' },
+    { id: 119, khoi: '8', mon: 'gdcd', de: 'Phòng ngừa tai nạn vũ khí, cháy nổ là trách nhiệm của:', options: ['Chỉ riêng lực lượng công an', 'Chỉ người lớn', 'Tất cả mọi công dân và học sinh', 'Chỉ các chú lính cứu hỏa'], ans: 2, exp: 'Mọi người dân đều có trách nhiệm nâng cao ý thức phòng cháy chữa cháy.' },
+    { id: 120, khoi: '8', mon: 'gdcd', de: 'Hành vi nào sau đây bảo vệ môi trường và tài nguyên thiên nhiên?', options: ['Xả rác bừa bãi xuống nguồn nước', 'Tái chế rác thải nhựa và trồng nhiều cây xanh', 'Chặt phá rừng bừa bãi', 'Đánh bắt cá bằng thuốc nổ'], ans: 1, exp: 'Trồng cây xanh và hạn chế rác thải nhựa giúp cân bằng hệ sinh thái.' },
+
+    // KHỐI 9
+    { id: 121, khoi: '9', mon: 'toan', de: 'Hệ số góc của đường thẳng y = -3x + 5 là gì?', options: ['5', '3', '-3', '-3/5'], ans: 2, exp: 'Phương trình đường thẳng y = ax + b có hệ số góc a = -3.' },
+    { id: 122, khoi: '9', mon: 'toan', de: 'Góc nội tiếp chắn nửa đường tròn là góc:', options: ['Góc nhọn', 'Góc vuông', 'Góc tù', 'Góc bẹt'], ans: 1, exp: 'Định lý hình học: Góc nội tiếp chắn nửa đường tròn luôn bằng 90° (góc vuông).' },
+    { id: 123, khoi: '9', mon: 'toan', de: 'Nghiệm của hệ phương trình { x + y = 3 ; x - y = 1 } là:', options: ['(2; 1)', '(1; 2)', '(3; 0)', '(0; 3)'], ans: 0, exp: 'Cộng 2 vế ta có 2x = 4 => x = 2; thay vào tìm được y = 1.' },
+    { id: 124, khoi: '9', mon: 'toan', de: 'Biệt thức Delta (Δ) của phương trình bậc hai ax² + bx + c = 0 (a ≠ 0) là:', options: ['b² - ac', 'b² - 4ac', 'b² + 4ac', '2b - 4ac'], ans: 1, exp: 'Công thức biệt thức chuẩn: Δ = b² - 4ac.' },
+    { id: 125, khoi: '9', mon: 'toan', de: 'Đồ thị của hàm số y = ax² (a ≠ 0) là một đường cong có tên là:', options: ['Đường Elip', 'Đường Parabol', 'Đường Hyperbol', 'Đường tròn'], ans: 1, exp: 'Đồ thị hàm bậc hai một biến có dạng đường cong Parabol.' },
+
+    { id: 126, khoi: '9', mon: 'van', de: 'Kiệt tác "Truyện Kiều" của Đại thi hào Nguyễn Du viết bằng chữ gì?', options: ['Chữ Quốc ngữ', 'Chữ Hán', 'Chữ Nôm', 'Chữ Pháp'], ans: 2, exp: 'Truyện Kiều được viết bằng chữ Nôm theo thể thơ lục bát.' },
+    { id: 127, khoi: '9', mon: 'van', de: 'Bài thơ "Đồng chí" của Chính Hữu sáng tác vào thời kì kháng chiến nào?', options: ['Kháng chiến chống Pháp', 'Kháng chiến chống Mỹ', 'Chiến tranh biên giới', 'Thời kì đổi mới'], ans: 0, exp: 'Bài thơ được sáng tác năm 1948 trong kháng chiến chống thực dân Pháp.' },
+    { id: 128, khoi: '9', mon: 'van', de: 'Trong truyện ngắn "Lặng lẽ Sa Pa" của Nguyễn Thành Long, nhân vật chính làm công việc gì?', options: ['Khai thác khoáng sản', 'Khí tượng kiêm vật lý địa cầu', 'Trồng thảo dược', 'Lái xe tải'], ans: 1, exp: 'Anh thanh niên 27 tuổi làm công tác khí tượng kiêm vật lý địa cầu trên đỉnh Yên Sơn.' },
+    { id: 129, khoi: '9', mon: 'van', de: 'Khởi ngữ trong câu là thành phần câu đứng trước chủ ngữ nhằm:', options: ['Bổ sung ý nghĩa về thời gian', 'Nêu lên đề tài được nói đến trong câu', 'Bộc lộ cảm xúc trực tiếp', 'Liên kết câu'], ans: 1, exp: 'Khởi ngữ đứng trước chủ ngữ để nêu đề tài của câu nói.' },
+    { id: 130, khoi: '9', mon: 'van', de: 'Hình tượng "chiếc bóng trên vách" trong "Chuyện người con gái Nam Xương" dẫn đến:', options: ['Sự sum họp đầm ấm', 'Nỗi oan khuất bi kịch của nàng Vũ Nương', 'Chiến thắng oanh liệt', 'Sự giàu có sung túc'], ans: 1, exp: 'Lời ngây thơ của đứa trẻ về chiếc bóng khiến Trương Sinh nghi oan đẩy Vũ Nương vào bi kịch.' },
+
+    { id: 131, khoi: '9', mon: 'anh', de: 'Which country is Big Ben located in?', options: ['France', 'United States', 'England', 'Australia'], ans: 2, exp: 'Tháp đồng hồ Big Ben là biểu tượng nổi tiếng ở London, nước Anh.' },
+    { id: 132, khoi: '9', mon: 'anh', de: 'I wish I _______ speak English fluently like a native speaker.', options: ['can', 'could', 'will', 'may'], ans: 1, exp: 'Cấu trúc ước muốn ở hiện tại: "S + wish + S + could + V".' },
+    { id: 133, khoi: '9', mon: 'anh', de: 'The woman _______ lives next door to my house is a famous doctor.', options: ['who', 'whom', 'which', 'whose'], ans: 0, exp: 'Đại từ quan hệ "who" thay thế cho danh từ chỉ người đóng vai trò chủ ngữ.' },
+    { id: 134, khoi: '9', mon: 'anh', de: 'My brother suggested _______ to the cinema this weekend.', options: ['go', 'goes', 'going', 'to go'], ans: 2, exp: 'Cấu trúc đề xuất gợi ý: "suggest + V-ing".' },
+    { id: 135, khoi: '9', mon: 'anh', de: 'English _______ as a second language in many countries.', options: ['speaks', 'is spoken', 'spoke', 'is speaking'], ans: 1, exp: 'Câu bị động ở thì Hiện tại đơn: "is + V-pp (spoken)".' },
+
+    { id: 136, khoi: '9', mon: 'khtn', de: 'Kim loại nào sau đây có tính dẫn điện và dẫn nhiệt tốt nhất?', options: ['Nhôm (Al)', 'Đồng (Cu)', 'Bạc (Ag)', 'Sắt (Fe)'], ans: 2, exp: 'Bạc (Ag) là kim loại dẫn điện và dẫn nhiệt tốt nhất.' },
+    { id: 137, khoi: '9', mon: 'khtn', de: 'Định luật Ôm cho đoạn mạch được phát biểu theo công thức nào?', options: ['I = U / R', 'I = U . R', 'I = R / U', 'U = I / R'], ans: 0, exp: 'Cường độ dòng điện: I = U / R.' },
+    { id: 138, khoi: '9', mon: 'khtn', de: 'Khí metan (CH4) là thành phần chủ yếu của loại khí nào trong tự nhiên?', options: ['Khí thiên nhiên và khí bioga', 'Khí than đá', 'Khí quyển', 'Khí thở'], ans: 0, exp: 'Metan chiếm phần lớn trong khí mỏ dầu, khí thiên nhiên và khí bioga.' },
+    { id: 139, khoi: '9', mon: 'khtn', de: 'Đơn vị chức năng mang thông tin di truyền xác định một tính trạng là:', options: ['Gen', 'Nhiễm sắc thể', 'Tế bào', 'Ribôxôm'], ans: 0, exp: 'Gen là một đoạn phân tử ADN mang thông tin mã hóa cấu trúc di truyền.' },
+    { id: 140, khoi: '9', mon: 'khtn', de: 'Thấu kính phân kì luôn cho ảnh có tính chất nào đối với vật thật?', options: ['Ảnh thật, ngược chiều, lớn hơn vật', 'Ảnh ảo, cùng chiều, nhỏ hơn vật', 'Ảnh thật, cùng chiều, bằng vật', 'Ảnh ảo, ngược chiều, lớn hơn vật'], ans: 1, exp: 'Vật thật qua thấu kính phân kì luôn cho ảnh ảo, cùng chiều và nhỏ hơn vật.' },
+
+    { id: 141, khoi: '9', mon: 'su-dia', de: 'Đảng Cộng sản Việt Nam được thành lập vào ngày tháng năm nào?', options: ['02/09/1945', '03/02/1930', '19/05/1890', '30/04/1975'], ans: 1, exp: 'Đảng Cộng sản Việt Nam do Nguyễn Ái Quốc sáng lập ngày 3 tháng 2 năm 1930.' },
+    { id: 142, khoi: '9', mon: 'su-dia', de: 'Vùng kinh tế nào sau đây có quy mô phát triển công nghiệp mạnh nhất nước ta?', options: ['Đông Nam Bộ', 'Tây Nguyên', 'Trung du và miền núi Bắc Bộ', 'Bắc Trung Bộ'], ans: 0, exp: 'Đông Nam Bộ dẫn đầu cả nước về quy mô GDP và công nghiệp.' },
+    { id: 143, khoi: '9', mon: 'su-dia', de: 'Chiến dịch Điện Biên Phủ toàn thắng vào ngày tháng năm nào?', options: ['07/05/1954', '19/12/1946', '30/04/1975', '10/10/1954'], ans: 0, exp: 'Ngày 7/5/1954, chiến dịch Điện Biên Phủ toàn thắng lừng lẫy năm châu.' },
+    { id: 144, khoi: '9', mon: 'su-dia', de: 'Đồng bằng sông Cửu Long là vựa sản xuất lớn nhất nước ta về:', options: ['Chè và cà phê', 'Lúa gạo, cây ăn quả và thủy sản', 'Gỗ rừng và khoáng sản', 'Cao su và hồ tiêu'], ans: 1, exp: 'ĐBSCL là vùng trọng điểm số 1 cả nước về lúa gạo, cây ăn trái và thủy sản.' },
+    { id: 145, khoi: '9', mon: 'su-dia', de: 'Đại thắng mùa Xuân 1975 giải phóng hoàn toàn miền Nam thống nhất đất nước vào ngày:', options: ['26/03/1975', '30/04/1975', '01/05/1975', '02/09/1975'], ans: 1, exp: 'Trưa ngày 30/4/1975, miền Nam hoàn toàn giải phóng, non sông thu về một mối.' },
+
+    { id: 146, khoi: '9', mon: 'tin', de: 'Mạng Internet toàn cầu được quản lý trực tiếp bởi cơ quan nào?', options: ['Một quốc gia duy nhất', 'Không thuộc quyền sở hữu hay quản lý riêng của bất kỳ tổ chức hay quốc gia nào', 'Tập đoàn Microsoft', 'Liên hợp quốc'], ans: 1, exp: 'Internet là mạng phi tập trung toàn cầu dựa trên chuẩn giao thức TCP/IP chung.' },
+    { id: 147, khoi: '9', mon: 'tin', de: 'Thư điện tử (Email) mang lại lợi ích nổi bật nào so với thư truyền thống?', options: ['Gửi nhận gần như tức thời, chi phí rất thấp và gửi được đa phương tiện', 'Chỉ gửi được văn bản ngắn', 'Bắt buộc người nhận phải ngồi cạnh máy tính', 'Không bảo mật'], ans: 0, exp: 'Email có tốc độ truyền tải cực nhanh, tiện lợi và tiết kiệm.' },
+    { id: 148, khoi: '9', mon: 'tin', de: 'Phần mềm nào sau đây là hệ quản trị cơ sở dữ liệu phổ biến?', options: ['Microsoft Word', 'Microsoft Excel', 'Microsoft Access', 'Windows Media Player'], ans: 2, exp: 'Microsoft Access là hệ quản trị cơ sở dữ liệu (DBMS).' },
+    { id: 149, khoi: '9', mon: 'tin', de: 'Trang web động (Dynamic Webpage) có đặc điểm nào dưới đây?', options: ['Nội dung cố định không bao giờ đổi', 'Nội dung hiển thị có thể thay đổi linh hoạt theo tương tác của người dùng', 'Không cần máy chủ web', 'Chỉ hiển thị hình ảnh đen trắng'], ans: 1, exp: 'Web động xử lý tương tác thời gian thực với người truy cập.' },
+    { id: 150, khoi: '9', mon: 'tin', de: 'Để phòng tránh mã độc và virus máy tính, người dùng nên:', options: ['Cài đặt và thường xuyên cập nhật phần mềm diệt virus chính hãng', 'Nhấp chuột vào mọi file đính kèm thư rác', 'Tắt tường lửa (Firewall)', 'Dùng chung USB không quét virus'], ans: 0, exp: 'Cập nhật phần mềm diệt virus là biện pháp bảo vệ cốt lõi.' },
+
+    { id: 151, khoi: '9', mon: 'cong-nghe', de: 'Đồng hồ Vạn năng (VOM) dùng trong lắp đặt mạng điện có thể đo được các đại lượng nào?', options: ['Chỉ đo điện áp', 'Điện áp, dòng điện và điện trở', 'Chỉ đo công suất', 'Đo tốc độ quay'], ans: 1, exp: 'Đồng hồ VOM đo được điện áp (Volt), cường độ (Ampere) và điện trở (Ohm).' },
+    { id: 152, khoi: '9', mon: 'cong-nghe', de: 'Cầu chì trong mạng điện sinh hoạt gia đình được mắc như thế nào?', options: ['Mắc song song với tải tiêu thụ', 'Mắc nối tiếp trên dây pha (dây nóng)', 'Mắc trên dây trung tính (dây nguội)', 'Mắc tùy ý bất kỳ đâu'], ans: 1, exp: 'Cầu chì bắt buộc mắc nối tiếp trên dây pha để bảo vệ quá tải/ngắn mạch.' },
+    { id: 153, khoi: '9', mon: 'cong-nghe', de: 'Công tơ điện (đồng hồ điện) trong gia đình dùng để đo đại lượng nào?', options: ['Công suất tiêu thụ', 'Điện năng tiêu thụ (kWh)', 'Cường độ dòng điện tức thời', 'Điện áp lưới'], ans: 1, exp: 'Công tơ điện đo lượng điện năng tiêu thụ tính theo kWh.' },
+    { id: 154, khoi: '9', mon: 'cong-nghe', de: 'Dây dẫn điện bọc cách điện gồm có các bộ phận cơ bản nào?', options: ['Lõi đồng và lớp vỏ cách điện', 'Hai lớp kim loại', 'Chỉ có lớp vỏ nhựa', 'Lõi than chì'], ans: 0, exp: 'Dây điện gồm ruột dẫn điện kim loại và vỏ nhựa cách điện bên ngoài.' },
+    { id: 155, khoi: '9', mon: 'cong-nghe', de: 'Bảng điện nhánh trong mạng điện trong nhà có chức năng gì?', options: ['Cung cấp điện cho toàn bộ khu phố', 'Lắp đặt các thiết bị đóng cắt, bảo vệ và lấy điện cho từng phòng/khu vực', 'Tăng điện áp', 'Chuyển điện một chiều thành xoay chiều'], ans: 1, exp: 'Bảng điện nhánh chứa cầu chì, aptomat, công tắc, ổ cắm phân phối cho từng phòng.' },
+
+    { id: 156, khoi: '9', mon: 'gdcd', de: 'Truyền thống yêu nước nồng nàn là truyền thống đạo đức:', options: ['Bình thường', 'Quý báu và thiêng liêng nhất của dân tộc Việt Nam', 'Chỉ có trong thời kỳ chiến tranh', 'Của riêng thế hệ trước'], ans: 1, exp: 'Lòng yêu nước là sợi chỉ đỏ xuyên suốt lịch sử dựng nước và giữ nước của dân tộc ta.' },
+    { id: 157, khoi: '9', mon: 'gdcd', de: 'Hành vi nào sau đây thể hiện lý tưởng sống cao đẹp của thanh niên ngày nay?', options: ['Sống buông thả, ỷ lại vào cha mẹ', 'Nỗ lực học tập, rèn luyện để cống hiến cho quê hương, đất nước', 'Chỉ theo đuổi danh lợi cá nhân', 'Tránh né trách nhiệm xã hội'], ans: 1, exp: 'Lý tưởng sống cao đẹp gắn liền trách nhiệm bản thân với Tổ quốc.' },
+    { id: 158, khoi: '9', mon: 'gdcd', de: 'Bảo vệ Tổ quốc Việt Nam xã hội chủ nghĩa là nghĩa vụ thiêng liêng và quyền cao quý của:', options: ['Chỉ riêng bộ đội chuyên nghiệp', 'Chỉ nam thanh niên', 'Mọi công dân Việt Nam', 'Chỉ cán bộ nhà nước'], ans: 2, exp: 'Điều 44 Hiến pháp 2013: Bảo vệ Tổ quốc là nghĩa vụ thiêng liêng và quyền cao quý của công dân.' },
+    { id: 159, khoi: '9', mon: 'gdcd', de: 'Hôn nhân hợp pháp ở Việt Nam được pháp luật thừa nhận dựa trên nguyên tắc:', options: ['Ép buộc và thách cưới', 'Tự nguyện, tiến bộ, một vợ một chồng, vợ chồng bình đẳng', 'Gia đình môn đăng hộ đối sắp đặt', 'Do người thứ ba quyết định'], ans: 1, exp: 'Luật Hôn nhân và Gia đình quy định hôn nhân tự nguyện, tiến bộ, một vợ một chồng bình đẳng.' },
+    { id: 160, khoi: '9', mon: 'gdcd', de: 'Hành vi nào vi phạm quyền tự do kinh doanh của công dân?', options: ['Kinh doanh đúng mặt hàng đã đăng ký', 'Sản xuất, buôn bán hàng giả, hàng cấm', 'Thực hiện đầy đủ nghĩa vụ nộp thuế', 'Bảo đảm an toàn vệ sinh thực phẩm'], ans: 1, exp: 'Sản xuất buôn bán hàng giả, hàng lậu là hành vi phạm pháp bị trừng phạt nghiêm khắc.' }
+  ];
+
+  let questions = fullQuestions160;
+  try {
+    const saved = localStorage.getItem('stt_thcs_questions_v7_complete');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length >= 160) {
+        questions = parsed;
+      } else {
+        localStorage.setItem('stt_thcs_questions_v7_complete', JSON.stringify(fullQuestions160));
+      }
+    } else {
+      localStorage.setItem('stt_thcs_questions_v7_complete', JSON.stringify(fullQuestions160));
+    }
+  } catch (err) { questions = fullQuestions160; }
+
+  let historyData = [];
+  try { historyData = JSON.parse(localStorage.getItem('stt_thcs_history_v7')) || []; } catch (e) { historyData = []; }
+
+  let adminPassword = 'admin123';
+  try { adminPassword = localStorage.getItem('stt_thcs_admin_pass') || 'admin123'; } catch (e) { adminPassword = 'admin123'; }
+
+  let currentSubject = 'all';
+  let currentGrade = '7';
+  let currentMode = 'tu-hoc';
+  let activeQuestions = [];
+  let wrongQuestions = [];
+  let qIndex = 0;
+  let score = 0;
+  let timerInterval = null;
+  let bellWinner = null;
+  let scoreTeamA = 0;
+  let scoreTeamB = 0;
+
+  // Điểm số phản xạ nhanh
+  let reflexScore = 0;
+  let reflexCorrect = 0;
+  let reflexCombo = 0;
+  let reflexMaxCombo = 0;
+
+  function showScreen(screenId) {
+    const screens = ['home-screen', 'setup-screen', 'quiz-screen', 'summary-screen', 'admin-screen'];
+    screens.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+
+    const target = document.getElementById(screenId);
+    if (!target) return;
+
+    if (screenId === 'home-screen') {
+      target.style.display = 'grid';
+      renderHomeStats();
+    } else {
+      target.style.display = 'block';
+    }
+
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch(e) {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  function exitToHome() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+    bellWinner = null;
+    showScreen('home-screen');
+  }
+
+  function selectSubject(sub, btn) {
+    currentSubject = sub;
+    var allSubjectBtns = document.querySelectorAll('.subject-btn');
+    for (var i = 0; i < allSubjectBtns.length; i++) {
+      allSubjectBtns[i].classList.remove('active');
+    }
+    if (btn) btn.classList.add('active');
+  }
+
+  function updateGradeSelection() {
+    currentGrade = document.getElementById('studentGrade').value;
+  }
+
+  function openModeSetup(mode) {
+    currentMode = mode;
+    currentGrade = document.getElementById('studentGrade').value;
+
+    const titles = {
+      'tu-hoc': '📖 Tự học',
+      'thi-thu': '⏱️ Thi thử',
+      'phan-xa': '⚡ Phản xạ nhanh',
+      'doi-khang': '🏆 Đối kháng'
+    };
+    const subtitles = {
+      'tu-hoc': 'Ôn luyện từng câu, hiển thị lời giải và kiến thức ngay sau khi chọn.',
+      'thi-thu': 'Làm bài thi có tính giờ theo từng câu hỏi, kiểm tra năng lực độc lập.',
+      'phan-xa': 'Tích điểm combo dồn dập, thử thách tốc độ phản xạ của não bộ.',
+      'doi-khang': 'Bấm chuông giành quyền trả lời trực tiếp giữa 2 đội thi đấu.'
+    };
+
+    document.getElementById('setup-mode-title').innerText = (titles[mode] || 'Thiết lập lượt học') + ' - ' + subjectNames[currentSubject];
+    document.getElementById('setup-mode-subtitle').innerText = subtitles[mode] || 'Cấu hình lượt thi đấu.';
+    document.getElementById('setupGrade').value = currentGrade;
+
+    // Hiển thị/ẩn các trường tương ứng với từng chế độ
+    document.getElementById('setup-group-team-a').style.display = (mode === 'doi-khang' ? 'block' : 'none');
+    document.getElementById('setup-group-team-b').style.display = (mode === 'doi-khang' ? 'block' : 'none');
+    document.getElementById('setup-group-time-per-q').style.display = (mode === 'thi-thu' || mode === 'doi-khang' ? 'block' : 'none');
+    document.getElementById('setup-group-duration').style.display = (mode === 'phan-xa' ? 'block' : 'none');
+    document.getElementById('setup-group-total-q').style.display = (mode === 'phan-xa' ? 'none' : 'block');
+
+    showScreen('setup-screen');
+  }
+
+  function confirmStartQuiz() {
+    const selGrade = document.getElementById('setupGrade').value;
+    const selDiff = document.getElementById('setupDifficulty').value;
+    const selTotal = document.getElementById('setupTotalQ').value;
+    const selOrder = document.getElementById('setupOrder').value;
+
+    let pool = questions.filter(function(q) {
+      const matchSubject = (currentSubject === 'all' || q.mon === currentSubject);
+      const matchGrade = (selGrade === 'all' || !q.khoi || q.khoi === 'all' || q.khoi === selGrade);
+      const matchDiff = (selDiff === 'all' || !q.mucDo || q.mucDo === selDiff);
+      return matchSubject && matchGrade && matchDiff;
+    });
+
+    if (!pool || pool.length === 0) {
+      pool = questions.filter(function(q) { return currentSubject === 'all' || q.mon === currentSubject; });
+      if (!pool || pool.length === 0) pool = questions.slice();
+    }
+
+    if (selOrder === 'random') {
+      activeQuestions = pool.slice().sort(function() { return Math.random() - 0.5; });
+    } else {
+      activeQuestions = pool.slice();
+    }
+
+    if (currentMode !== 'phan-xa' && selTotal !== 'all') {
+      const limit = parseInt(selTotal);
+      if (!isNaN(limit) && limit > 0) {
+        activeQuestions = activeQuestions.slice(0, limit);
+      }
+    }
+
+    wrongQuestions = [];
+    qIndex = 0;
+    score = 0;
+    scoreTeamA = 0;
+    scoreTeamB = 0;
+    bellWinner = null;
+    reflexScore = 0;
+    reflexCorrect = 0;
+    reflexCombo = 0;
+    reflexMaxCombo = 0;
+
+    // Giao diện chế độ
+    document.getElementById('versus-area').style.display = (currentMode === 'doi-khang' ? 'flex' : 'none');
+    document.getElementById('versus-status').style.display = (currentMode === 'doi-khang' ? 'block' : 'none');
+    document.getElementById('reflex-bar').style.display = (currentMode === 'phan-xa' ? 'grid' : 'none');
+    document.getElementById('keyboard-hint').style.display = (window.innerWidth > 768 ? 'block' : 'none');
+
+    if (currentMode === 'doi-khang') {
+      document.getElementById('team-name-label-a').innerText = document.getElementById('setupTeamA').value || 'ĐỘI A';
+      document.getElementById('team-name-label-b').innerText = document.getElementById('setupTeamB').value || 'ĐỘI B';
+      document.getElementById('score-a').innerText = '0';
+      document.getElementById('score-b').innerText = '0';
+    }
+
+    const modeNames = { 'tu-hoc': 'TỰ HỌC', 'thi-thu': 'THI THỬ', 'phan-xa': 'PHẢN XẠ NHANH', 'doi-khang': 'ĐỐI KHÁNG 2 ĐỘI' };
+    document.getElementById('quiz-badge').innerText = modeNames[currentMode] || 'THI ĐẤU';
+
+    showScreen('quiz-screen');
+
+    if (currentMode === 'phan-xa') {
+      const totalSec = parseInt(document.getElementById('setupDuration').value) || 60;
+      runReflexTotalTimer(totalSec);
+    }
+
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    if (currentMode !== 'phan-xa' && timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    if (!activeQuestions || activeQuestions.length === 0) {
+      activeQuestions = fullQuestions160.slice();
+    }
+
+    const q = activeQuestions[qIndex];
+    if (!q) {
+      finishGame();
+      return;
+    }
+
+    document.getElementById('quiz-progress').innerText = 'Câu ' + (qIndex + 1) + '/' + activeQuestions.length;
+    document.getElementById('quiz-subject-badge').innerText = (subjectNames[q.mon] || 'MÔN HỌC').toUpperCase();
+    document.getElementById('quiz-grade-badge').innerText = (gradeNames[q.khoi] || 'KHỐI ' + (q.khoi || 'THCS')).toUpperCase();
+    document.getElementById('quiz-q-text').innerText = q.de;
+    document.getElementById('quiz-exp').style.display = 'none';
+    document.getElementById('quiz-next-btn').style.display = 'none';
+
+    bellWinner = null;
+    const teamA = document.getElementById('team-box-a');
+    const teamB = document.getElementById('team-box-b');
+    if (teamA) teamA.classList.remove('active-turn');
+    if (teamB) teamB.classList.remove('active-turn');
+
+    if (currentMode === 'doi-khang') {
+      document.getElementById('versus-status').innerText = '🔔 Mời hai đội bấm chuông để giành quyền trả lời!';
+    }
+
+    const optBox = document.getElementById('quiz-options');
+    optBox.innerHTML = (q.options || []).map(function(opt, i) {
+      return '<button type="button" class="option-btn" id="opt-' + i + '" onclick="chooseAnswer(' + i + ')">' +
+        '<b>' + String.fromCharCode(65 + i) + '.</b>&nbsp;' + opt +
+      '</button>';
+    }).join('');
+
+    if (currentMode === 'thi-thu') {
+      const sec = parseInt(document.getElementById('setupTimePerQ').value) || 15;
+      runQuestionTimer(sec);
+    } else if (currentMode === 'doi-khang') {
+      const sec = parseInt(document.getElementById('setupTimePerQ').value) || 15;
+      runQuestionTimer(sec);
+    } else if (currentMode !== 'phan-xa') {
+      document.getElementById('quiz-timer').innerText = '';
+    }
+  }
+
+  function bellPress(team) {
+    if (currentMode !== 'doi-khang' || bellWinner !== null) return;
+    bellWinner = team;
+
+    const teamA = document.getElementById('team-box-a');
+    const teamB = document.getElementById('team-box-b');
+    const versusStatus = document.getElementById('versus-status');
+    const nameA = document.getElementById('setupTeamA').value || 'ĐỘI A';
+    const nameB = document.getElementById('setupTeamB').value || 'ĐỘI B';
+
+    if (team === 'A') {
+      if (teamA) teamA.classList.add('active-turn');
+      if (versusStatus) versusStatus.innerHTML = '👉 <b>' + nameA + '</b> đã giành quyền! Mời chọn đáp án.';
+    } else {
+      if (teamB) teamB.classList.add('active-turn');
+      if (versusStatus) versusStatus.innerHTML = '👉 <b>' + nameB + '</b> đã giành quyền! Mời chọn đáp án.';
+    }
+  }
+
+  window.addEventListener('keydown', function(e) {
+    const quizScreen = document.getElementById('quiz-screen');
+    if (!quizScreen || quizScreen.style.display !== 'block') return;
+
+    if (currentMode === 'doi-khang' && bellWinner === null) {
+      if (e.key === 'a' || e.key === 'A') { bellPress('A'); return; }
+      if (e.key === 'l' || e.key === 'L') { bellPress('B'); return; }
+    }
+
+    if (['1', '2', '3', '4'].indexOf(e.key) !== -1) {
+      const idx = parseInt(e.key) - 1;
+      const targetBtn = document.getElementById('opt-' + idx);
+      if (targetBtn && !targetBtn.disabled) chooseAnswer(idx);
+    } else if (e.key === 'Enter') {
+      const nextBtn = document.getElementById('quiz-next-btn');
+      if (nextBtn && nextBtn.style.display !== 'none') nextQuestion();
+    }
+  });
+
+  function chooseAnswer(idx) {
+    if (currentMode === 'doi-khang' && bellWinner === null) {
+      notify('Vui lòng bấm chuông để giành quyền trước khi chọn đáp án!');
+      return;
+    }
+
+    if (currentMode !== 'phan-xa' && timerInterval) {
+      clearInterval(timerInterval);
+    }
+
+    const q = activeQuestions[qIndex];
+    if (!q) return;
+
+    let correctIdx = (typeof q.ans === 'number') ? q.ans : parseInt(q.ans);
+    if (isNaN(correctIdx)) correctIdx = 0;
+
+    const isCorrect = (idx === correctIdx);
+    var allOptions = document.querySelectorAll('.option-btn');
+    for (var i = 0; i < allOptions.length; i++) {
+      allOptions[i].disabled = true;
+    }
+    
+    const correctBtn = document.getElementById('opt-' + correctIdx);
+    if (correctBtn) correctBtn.classList.add('correct');
+
+    if (!isCorrect) {
+      const wrongBtn = document.getElementById('opt-' + idx);
+      if (wrongBtn) wrongBtn.classList.add('wrong');
+      wrongQuestions.push({
+        question: q,
+        userAns: idx,
+        correctAns: correctIdx
+      });
+    } else {
+      score++;
+    }
+
+    // Xử lý điểm theo từng chế độ
+    if (currentMode === 'doi-khang') {
+      if (bellWinner === 'A') {
+        scoreTeamA += isCorrect ? 10 : -5;
+        document.getElementById('score-a').innerText = scoreTeamA;
+      } else {
+        scoreTeamB += isCorrect ? 10 : -5;
+        document.getElementById('score-b').innerText = scoreTeamB;
+      }
+    } else if (currentMode === 'phan-xa') {
+      if (isCorrect) {
+        reflexCorrect++;
+        reflexCombo++;
+        if (reflexCombo > reflexMaxCombo) reflexMaxCombo = reflexCombo;
+        reflexScore += (10 + reflexCombo * 2);
+      } else {
+        reflexCombo = 0;
+      }
+      document.getElementById('reflex-score').innerText = reflexScore;
+      document.getElementById('reflex-correct').innerText = reflexCorrect;
+      document.getElementById('reflex-combo').innerText = reflexCombo;
+      document.getElementById('reflex-max-combo').innerText = reflexMaxCombo;
+    }
+
+    const resTag = document.getElementById('quiz-result-tag');
+    if (resTag) {
+      resTag.innerHTML = isCorrect ? '<span style="color: var(--success);">✓ Chính xác!</span>' : '<span style="color: var(--danger);">✗ Chưa đúng!</span>';
+    }
+    document.getElementById('quiz-exp-text').innerText = q.exp || 'Chưa có lời giải chi tiết.';
+    document.getElementById('quiz-exp').style.display = 'block';
+
+    if (currentMode === 'phan-xa') {
+      setTimeout(nextQuestion, 750);
+    } else {
+      document.getElementById('quiz-next-btn').style.display = 'inline-flex';
+    }
+  }
+
+  function nextQuestion() {
+    qIndex++;
+    if (qIndex < activeQuestions.length) loadQuestion();
+    else finishGame();
+  }
+
+  function runQuestionTimer(seconds) {
+    let timeLeft = seconds;
+    const timerDisplay = document.getElementById('quiz-timer');
+    timerDisplay.innerText = '⏳ ' + timeLeft + 's';
+
+    timerInterval = setInterval(function() {
+      timeLeft--;
+      timerDisplay.innerText = '⏳ ' + timeLeft + 's';
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        // Hết giờ
+        chooseAnswer(-1);
+      }
+    }, 1000);
+  }
+
+  function runReflexTotalTimer(seconds) {
+    let totalLeft = seconds;
+    const timerDisplay = document.getElementById('quiz-timer');
+    timerDisplay.innerText = '⏱️ ' + totalLeft + 's';
+
+    timerInterval = setInterval(function() {
+      totalLeft--;
+      timerDisplay.innerText = '⏱️ ' + totalLeft + 's';
+      if (totalLeft <= 0) {
+        clearInterval(timerInterval);
+        finishGame();
+      }
+    }, 1000);
+  }
+
+  function finishGame() {
+    if (timerInterval) clearInterval(timerInterval);
+    const total = activeQuestions.length || 1;
+    const acc = Math.round((score / total) * 100);
+
+    const name = (document.getElementById('studentName').value.trim()) || 'Thí sinh';
+    const sClass = (document.getElementById('studentClass').value.trim()) || '7A';
+
+    let detailResult = score + '/' + total + ' (' + acc + '%)';
+    if (currentMode === 'doi-khang') {
+      const nameA = document.getElementById('setupTeamA').value || 'Đội A';
+      const nameB = document.getElementById('setupTeamB').value || 'Đội B';
+      detailResult = nameA + ': ' + scoreTeamA + 'đ | ' + nameB + ': ' + scoreTeamB + 'đ';
+    } else if (currentMode === 'phan-xa') {
+      detailResult = reflexScore + ' điểm (Combo: ' + reflexMaxCombo + ')';
+    }
+
+    historyData.unshift({
+      time: new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString(),
+      name: name,
+      class: sClass + ' (' + (gradeNames[currentGrade] || 'K' + currentGrade) + ')',
+      mode: currentMode + ' [' + subjectNames[currentSubject] + ']',
+      score: detailResult
+    });
+
+    try { localStorage.setItem('stt_thcs_history_v7', JSON.stringify(historyData)); } catch (e) {}
+
+    // Hiển thị màn hình tổng kết
+    if (currentMode === 'doi-khang') {
+      const nameA = document.getElementById('setupTeamA').value || 'Đội A';
+      const nameB = document.getElementById('setupTeamB').value || 'Đội B';
+      const winText = scoreTeamA > scoreTeamB ? nameA + ' CHIẾN THẮNG!' : (scoreTeamB > scoreTeamA ? nameB + ' CHIẾN THẮNG!' : 'HÒA NHAU!');
+      document.getElementById('sum-acc').innerText = winText;
+      document.getElementById('sum-acc').style.fontSize = '32px';
+      document.getElementById('sum-status').innerText = 'Tỉ số: ' + scoreTeamA + ' - ' + scoreTeamB;
+      document.getElementById('sum-detail').innerText = 'Tổng số câu thi đấu: ' + total;
+    } else if (currentMode === 'phan-xa') {
+      document.getElementById('sum-acc').innerText = reflexScore + 'đ';
+      document.getElementById('sum-acc').style.fontSize = '54px';
+      document.getElementById('sum-status').innerText = 'Xuất sắc! Đúng ' + reflexCorrect + ' câu';
+      document.getElementById('sum-detail').innerText = 'Chuỗi combo cao nhất: ' + reflexMaxCombo;
+    } else {
+      document.getElementById('sum-acc').innerText = acc + '%';
+      document.getElementById('sum-acc').style.fontSize = '54px';
+      document.getElementById('sum-status').innerText = acc >= 80 ? 'Xuất sắc!' : (acc >= 50 ? 'Khá tốt!' : 'Tiếp tục luyện tập nhé!');
+      document.getElementById('sum-detail').innerText = 'Đúng ' + score + '/' + total + ' câu (' + acc + '%)';
+    }
+
+    // Hiển thị mục Ôn câu sai nếu có câu sai
+    const btnWrong = document.getElementById('btn-review-wrong');
+    const reviewListBox = document.getElementById('review-wrong-list-box');
+    const reviewItems = document.getElementById('review-wrong-items');
+
+    if (wrongQuestions.length > 0) {
+      if (btnWrong) btnWrong.style.display = 'inline-flex';
+      if (reviewListBox) reviewListBox.style.display = 'block';
+      if (reviewItems) {
+        reviewItems.innerHTML = wrongQuestions.map(function(item) {
+          const q = item.question;
+          const userText = item.userAns >= 0 && q.options[item.userAns] ? q.options[item.userAns] : 'Hết giờ/Không chọn';
+          const corrText = q.options[item.correctAns];
+          return '<div class="wrong-review-card">' +
+            '<div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">' + q.de + '</div>' +
+            '<div style="color: var(--danger); font-size: 12px;">Đã chọn: ' + userText + '</div>' +
+            '<div style="color: var(--success); font-size: 12px; font-weight: 700;">Đáp án đúng: ' + corrText + '</div>' +
+            '<div style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">💡 ' + (q.exp || '') + '</div>' +
+          '</div>';
+        }).join('');
+      }
+    } else {
+      if (btnWrong) btnWrong.style.display = 'none';
+      if (reviewListBox) reviewListBox.style.display = 'none';
+    }
+
+    showScreen('summary-screen');
+  }
+
+  function startWrongReview() {
+    if (!wrongQuestions || wrongQuestions.length === 0) return;
+    activeQuestions = wrongQuestions.map(function(item) { return item.question; });
+    wrongQuestions = [];
+    qIndex = 0;
+    score = 0;
+    currentMode = 'tu-hoc';
+    document.getElementById('quiz-badge').innerText = 'ÔN CÂU SAI';
+    document.getElementById('versus-area').style.display = 'none';
+    document.getElementById('reflex-bar').style.display = 'none';
+    showScreen('quiz-screen');
+    loadQuestion();
+  }
+
+  function openAdminAuthModal() {
+    var modal = document.getElementById('adminAuthModal');
+    var input = document.getElementById('adminAuthInput');
+    if (input) input.value = '';
+    if (modal) modal.style.display = 'flex';
+    if (input) input.focus();
+  }
+
+  function closeAdminAuthModal() {
+    var modal = document.getElementById('adminAuthModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function confirmAdminAuth() {
+    var input = document.getElementById('adminAuthInput');
+    var val = input ? input.value : '';
+    if (val === adminPassword) {
+      closeAdminAuthModal();
+      renderAdminQuestions();
+      showScreen('admin-screen');
+    } else {
+      notify('Sai mật khẩu! Mật khẩu mặc định là: admin123');
+    }
+  }
+
+  function switchAdminTab(tab, btn) {
+    var allTabs = document.querySelectorAll('.tab-btn');
+    for (var i = 0; i < allTabs.length; i++) {
+      allTabs[i].classList.remove('active');
+    }
+    if (btn) btn.classList.add('active');
+    document.getElementById('tab-ngan-hang').style.display = (tab === 'ngan-hang' ? 'block' : 'none');
+    document.getElementById('tab-lich-su').style.display = (tab === 'lich-su' ? 'block' : 'none');
+    document.getElementById('tab-cau-hinh').style.display = (tab === 'cau-hinh' ? 'block' : 'none');
+    if (tab === 'lich-su') renderAdminHistory();
+  }
+
+  function renderAdminQuestions() {
+    document.getElementById('admin-total-q').innerText = questions.length;
+    const tbody = document.getElementById('admin-q-table');
+    tbody.innerHTML = questions.map(function(q, i) {
+      return '<tr>' +
+        '<td>' + q.id + '</td>' +
+        '<td><b style="color: #d97706;">' + (gradeNames[q.khoi] || q.khoi || 'Dùng chung') + '</b></td>' +
+        '<td><b style="color: var(--primary);">' + (subjectNames[q.mon] || q.mon) + '</b></td>' +
+        '<td>' + q.de + '</td>' +
+        '<td style="color: var(--success); font-weight: 700;">' + (q.options ? q.options[q.ans] : '') + '</td>' +
+        '<td>' +
+          '<button type="button" class="btn btn-warning" style="padding: 4px 8px; font-size: 11px; margin-right: 4px;" onclick="openQuestionModal(' + i + ')">Sửa</button>' +
+          '<button type="button" class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteQuestion(' + i + ')">Xóa</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function openQuestionModal(index) {
+    const isEdit = (index !== null);
+    document.getElementById('editIndex').value = isEdit ? index : -1;
+    document.getElementById('modalTitle').innerText = isEdit ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới';
+
+    if (isEdit && questions[index]) {
+      const q = questions[index];
+      document.getElementById('modalKhoi').value = q.khoi || 'all';
+      document.getElementById('modalMon').value = q.mon || 'toan';
+      document.getElementById('modalDe').value = q.de || '';
+      document.getElementById('modalOpt0').value = (q.options && q.options[0]) || '';
+      document.getElementById('modalOpt1').value = (q.options && q.options[1]) || '';
+      document.getElementById('modalOpt2').value = (q.options && q.options[2]) || '';
+      document.getElementById('modalOpt3').value = (q.options && q.options[3]) || '';
+      document.getElementById('modalAns').value = q.ans || 0;
+      document.getElementById('modalExp').value = q.exp || '';
+    } else {
+      document.getElementById('modalKhoi').value = currentGrade === 'all' ? '7' : currentGrade;
+      document.getElementById('modalMon').value = currentSubject === 'all' ? 'toan' : currentSubject;
+      document.getElementById('modalDe').value = '';
+      document.getElementById('modalOpt0').value = '';
+      document.getElementById('modalOpt1').value = '';
+      document.getElementById('modalOpt2').value = '';
+      document.getElementById('modalOpt3').value = '';
+      document.getElementById('modalAns').value = 0;
+      document.getElementById('modalExp').value = '';
+    }
+
+    document.getElementById('questionModal').style.display = 'flex';
+  }
+
+  function closeQuestionModal() {
+    document.getElementById('questionModal').style.display = 'none';
+  }
+
+  function saveQuestionModal() {
+    const editIdx = parseInt(document.getElementById('editIndex').value);
+    const de = document.getElementById('modalDe').value.trim();
+    const opt0 = document.getElementById('modalOpt0').value.trim();
+    const opt1 = document.getElementById('modalOpt1').value.trim();
+    const opt2 = document.getElementById('modalOpt2').value.trim();
+    const opt3 = document.getElementById('modalOpt3').value.trim();
+
+    if (!de || !opt0 || !opt1) {
+      notify('Vui lòng nhập đầy đủ nội dung câu hỏi và ít nhất 2 đáp án A, B!');
+      return;
+    }
+
+    const qData = {
+      id: editIdx >= 0 ? questions[editIdx].id : (questions.length ? Math.max.apply(null, questions.map(function(q) { return q.id; })) + 1 : 1),
+      khoi: document.getElementById('modalKhoi').value,
+      mon: document.getElementById('modalMon').value,
+      de: de,
+      options: [opt0, opt1, opt2, opt3],
+      ans: parseInt(document.getElementById('modalAns').value),
+      exp: document.getElementById('modalExp').value.trim() || 'Chưa có giải thích.'
+    };
+
+    if (editIdx >= 0) questions[editIdx] = qData;
+    else questions.push(qData);
+
+    try { localStorage.setItem('stt_thcs_questions_v7_complete', JSON.stringify(questions)); } catch (e) {}
+
+    renderAdminQuestions();
+    closeQuestionModal();
+    notify('Đã lưu câu hỏi thành công!');
+  }
+
+  function deleteQuestion(index) {
+    showConfirm('Xác nhận xóa câu hỏi', 'Thầy/Cô có chắc chắn muốn xóa câu hỏi này khỏi ngân hàng?', function() {
+      questions.splice(index, 1);
+      try { localStorage.setItem('stt_thcs_questions_v7_complete', JSON.stringify(questions)); } catch (e) {}
+      renderAdminQuestions();
+      notify('Đã xóa câu hỏi!');
+    });
+  }
+
+  function restoreDefault160() {
+    showConfirm('Khôi phục 160 câu gốc', 'Hành động này sẽ thiết lập lại đúng 160 câu hỏi chuẩn GDPT ban đầu?', function() {
+      questions = fullQuestions160.slice();
+      try { localStorage.setItem('stt_thcs_questions_v7_complete', JSON.stringify(questions)); } catch (e) {}
+      renderAdminQuestions();
+      notify('Đã khôi phục 160 câu hỏi ban đầu!');
+    });
+  }
+
+  function downloadExcelTemplate() {
+    const templateData = [
+      ["Khối (6/7/8/9/all)", "Mã môn (toan/van/anh/khtn/su-dia/tin/cong-nghe/gdcd)", "Nội dung câu hỏi", "Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D", "Đáp án đúng (A/B/C/D)", "Giải thích"],
+      ["7", "toan", "Căn bậc hai số học của 81 là bao nhiêu?", "9", "-9", "±9", "18", "A", "Vì 9² = 81 và 9 > 0."],
+      ["6", "van", "Tác giả của tác phẩm Dế Mèn phiêu lưu ký là ai?", "Nam Cao", "Tô Hoài", "Nguyễn Du", "Vũ Trọng Phụng", "B", "Tô Hoài sáng tác năm 1941."],
+      ["8", "khtn", "Đơn vị đo cường độ dòng điện trong hệ SI là gì?", "Vôn (V)", "Ampe (A)", "Oát (W)", "Jun (J)", "B", "Ampe là đơn vị chuẩn đo I."],
+      ["all", "gdcd", "Câu tục ngữ 'Thương người như thể thương thân' nói về truyền thống gì?", "Yêu thương con người", "Tiết kiệm", "Dũng cảm", "Tự lập", "A", "Nhắc nhở lòng nhân ái, sẻ chia."]
+    ];
+
+    if (window.XLSX && XLSX.utils) {
+      try {
+        const ws = XLSX.utils.aoa_to_sheet(templateData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Mau_Cau_Hoi");
+        XLSX.writeFile(wb, "Mau_Ngan_Hang_Cau_Hoi_THCS.xlsx");
+        return;
+      } catch (err) {}
+    }
+
+    let csvContent = "\uFEFF";
+    templateData.forEach(function(row) {
+      let formattedRow = row.map(function(val) { return '"' + (val + '').replace(/"/g, '""') + '"'; }).join(",");
+      csvContent += formattedRow + "\r\n";
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Mau_Ngan_Hang_Cau_Hoi_THCS.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function downloadWordTemplate() {
+    const textContent = "HƯỚNG DẪN SOẠN CÂU HỎI FILE WORD / TEXT:\n" +
+"Thầy/Cô có thể soạn theo cấu trúc đơn giản dưới đây, sau đó lưu lại và bấm 'Nạp Word/Excel' để đưa lên hệ thống.\n\n" +
+"Câu 1: Căn bậc hai số học của 81 là bao nhiêu?\n" +
+"Khối: 7\n" +
+"Môn: toan\n" +
+"A. 9\n" +
+"B. -9\n" +
+"C. ±9\n" +
+"D. 18\n" +
+"Đáp án: A\n" +
+"Giải thích: Vì 9 > 0 và 9² = 81.\n\n" +
+"Câu 2: Tác giả của tác phẩm Dế Mèn phiêu lưu ký là ai?\n" +
+"Khối: 6\n" +
+"Môn: van\n" +
+"A. Nam Cao\n" +
+"B. Tô Hoài\n" +
+"C. Nguyễn Du\n" +
+"D. Vũ Trọng Phụng\n" +
+"Đáp án: B\n" +
+"Giải thích: Tác phẩm nổi tiếng của nhà văn Tô Hoài.\n\n" +
+"(Ghi chú mã môn: toan, van, anh, khtn, su-dia, tin, cong-nghe, gdcd. Khối: 6, 7, 8, 9 hoặc all)";
+
+    const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+    const dl = document.createElement('a');
+    dl.href = URL.createObjectURL(blob);
+    dl.download = "Mau_Soan_Cau_Hoi_THCS.txt";
+    document.body.appendChild(dl);
+    dl.click();
+    document.body.removeChild(dl);
+  }
+
+  function importDocuments(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) parseExcel(file);
+    else if (file.name.endsWith('.docx')) parseWordDocx(file);
+    else if (file.name.endsWith('.txt')) parsePlainText(file);
+    else notify('Định dạng không được hỗ trợ! Vui lòng chọn .xlsx, .xls, .csv, .docx hoặc .txt.');
+    event.target.value = '';
+  }
+
+  function parseExcel(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        let addedCount = 0;
+        let startId = questions.length ? Math.max.apply(null, questions.map(function(q) { return q.id; })) + 1 : 1;
+
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row || row.length < 4) continue;
+
+          let khoiRaw = (row[0] || 'all').toString().trim();
+          let monRaw = (row[1] || 'toan').toString().toLowerCase().trim();
+          let mon = subjectNames[monRaw] ? monRaw : 'toan';
+
+          let de = row[2] || '';
+          let a = row[3] || '';
+          let b = row[4] || '';
+          let c = row[5] || '';
+          let d = row[6] || '';
+          let ansStr = (row[7] || 'A').toString().toUpperCase().trim();
+          let ansIdx = 0;
+          if (ansStr === 'B' || ansStr === '1') ansIdx = 1;
+          else if (ansStr === 'C' || ansStr === '2') ansIdx = 2;
+          else if (ansStr === 'D' || ansStr === '3') ansIdx = 3;
+
+          let exp = row[8] || 'Chưa có giải thích.';
+
+          if (de && a && b) {
+            questions.push({
+              id: startId++,
+              khoi: khoiRaw,
+              mon: mon,
+              de: de,
+              options: [a, b, c, d],
+              ans: ansIdx,
+              exp: exp
+            });
+            addedCount++;
+          }
+        }
+
+        localStorage.setItem('stt_thcs_questions_v7_complete', JSON.stringify(questions));
+        renderAdminQuestions();
+        notify('Thành công: Đã nạp ' + addedCount + ' câu hỏi từ bảng tính Excel!');
+      } catch (err) {
+        notify('Lỗi xử lý file Excel! Vui lòng đối chiếu file mẫu.');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function parseWordDocx(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      if (window.mammoth) {
+        mammoth.extractRawText({ arrayBuffer: e.target.result })
+          .then(function(result) { parseTextToQuestions(result.value); })
+          .catch(function(err) { notify('Lỗi khi đọc file Word .docx!'); });
+      } else {
+        notify('Chưa nạp được bộ đọc Word, vui lòng kiểm tra kết nối mạng hoặc dùng file .txt / Excel.');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function parsePlainText(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) { parseTextToQuestions(e.target.result); };
+    reader.readAsText(file);
+  }
+
+  function parseTextToQuestions(text) {
+    const lines = text.split(/\r?\n/).map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 0; });
+    let addedCount = 0;
+    let startId = questions.length ? Math.max.apply(null, questions.map(function(q) { return q.id; })) + 1 : 1;
+    let currentQ = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      if (/^câu\s*\d+[\s\:\.]/i.test(line)) {
+        if (currentQ && currentQ.de && currentQ.options.length >= 2) {
+          questions.push(currentQ);
+          addedCount++;
+        }
+        currentQ = {
+          id: startId++,
+          khoi: currentGrade || 'all',
+          mon: currentSubject === 'all' ? 'toan' : currentSubject,
+          de: line.replace(/^câu\s*\d+[\s\:\.]/i, '').trim(),
+          options: [],
+          ans: 0,
+          exp: 'Chưa có giải thích.'
+        };
+      } else if (currentQ) {
+        if (/^[A-D][\.\:\)]\s*/.test(line)) {
+          currentQ.options.push(line.replace(/^[A-D][\.\:\)]\s*/, '').trim());
+        } else if (/^đáp án[\s\:\.]+/i.test(line)) {
+          let ansChar = line.replace(/^đáp án[\s\:\.]+/i, '').trim().toUpperCase();
+          if (ansChar.indexOf('B') !== -1) currentQ.ans = 1;
+          else if (ansChar.indexOf('C') !== -1) currentQ.ans = 2;
+          else if (ansChar.indexOf('D') !== -1) currentQ.ans = 3;
+          else currentQ.ans = 0;
+        } else if (/^khối[\s\:\.]+/i.test(line)) {
+          currentQ.khoi = line.replace(/^khối[\s\:\.]+/i, '').trim();
+        } else if (/^môn[\s\:\.]+/i.test(line)) {
+          let m = line.replace(/^môn[\s\:\.]+/i, '').trim().toLowerCase();
+          if (subjectNames[m]) currentQ.mon = m;
+        } else if (/^giải thích[\s\:\.]+/i.test(line)) {
+          currentQ.exp = line.replace(/^giải thích[\s\:\.]+/i, '').trim();
+        }
+      }
+    }
+
+    if (currentQ && currentQ.de && currentQ.options.length >= 2) {
+      questions.push(currentQ);
+      addedCount++;
+    }
+
+    if (addedCount > 0) {
+      localStorage.setItem('stt_thcs_questions_v7_complete', JSON.stringify(questions));
+      renderAdminQuestions();
+      notify('Đã trích xuất và thêm thành công ' + addedCount + ' câu hỏi từ tài liệu!');
+    } else {
+      notify('Không nhận diện được câu hỏi! Vui lòng xem mẫu định dạng.');
+    }
+  }
+
+  function renderAdminHistory() {
+    const tbody = document.getElementById('admin-hist-table');
+    tbody.innerHTML = historyData.map(function(h) {
+      return '<tr>' +
+        '<td>' + h.time + '</td>' +
+        '<td><b>' + h.name + '</b></td>' +
+        '<td>' + h.class + '</td>' +
+        '<td>' + h.mode + '</td>' +
+        '<td>' + h.score + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function exportHistoryCSV() {
+    if (!historyData || historyData.length === 0) {
+      notify('Chưa có lịch sử thi để xuất!');
+      return;
+    }
+    let csvContent = "\uFEFFThời gian,Họ tên,Lớp,Chế độ,Kết quả\r\n";
+    historyData.forEach(function(h) {
+      csvContent += '"' + h.time + '","' + h.name + '","' + h.class + '","' + h.mode + '","' + h.score + '"\r\n';
+    });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const dl = document.createElement('a');
+    dl.href = URL.createObjectURL(blob);
+    dl.download = "Lich_Su_Thi_THCS.csv";
+    document.body.appendChild(dl);
+    dl.click();
+    document.body.removeChild(dl);
+  }
+
+  function promptClearHistory() {
+    showConfirm('Xóa lịch sử thi', 'Thầy/Cô có chắc chắn muốn xóa toàn bộ lịch sử thi đã lưu trên thiết bị này?', function() {
+      historyData = [];
+      try { localStorage.removeItem('stt_thcs_history_v7'); } catch(e) {}
+      renderAdminHistory();
+      notify('Đã làm sạch toàn bộ lịch sử thi!');
+    });
+  }
+
+  function saveAdminPass() {
+    const p = document.getElementById('newAdminPass').value.trim();
+    if (p.length < 4) return notify('Mật khẩu phải từ 4 ký tự trở lên!');
+    adminPassword = p;
+    try { localStorage.setItem('stt_thcs_admin_pass', p); } catch(e) {}
+    notify('Đã cập nhật mật khẩu Admin thành công!');
+    document.getElementById('newAdminPass').value = '';
+  }
+
+  function exportJSON() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions, null, 2));
+    const dl = document.createElement('a');
+    dl.setAttribute("href", dataStr);
+    dl.setAttribute("download", "San_Choi_Tri_Thuc_THCS_160Cau.json");
+    document.body.appendChild(dl);
+    dl.click();
+    document.body.removeChild(dl);
+  }
+
+  function importJSON(e) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        questions = JSON.parse(ev.target.result);
+        localStorage.setItem('stt_thcs_questions_v7_complete', JSON.stringify(questions));
+        renderAdminQuestions();
+        notify('Nhập dữ liệu JSON thành công!');
+      } catch (err) {
+        notify('Tệp tin không đúng định dạng JSON!');
+      }
+    };
+    reader.readAsText(e.target.files[0]);
+  }
+
+  function renderHomeStats() {
+    const countEl = document.getElementById('stat-count');
+    if (countEl) countEl.innerText = historyData.length;
+
+    const accEl = document.getElementById('stat-acc');
+    if (accEl) {
+      if (historyData.length > 0) {
+        let totalPercent = 0;
+        let countScored = 0;
+        historyData.forEach(function(h) {
+          const match = h.score.match(/(\d+)%/);
+          if (match) {
+            totalPercent += parseInt(match[1]);
+            countScored++;
+          }
+        });
+        accEl.innerText = countScored > 0 ? Math.round(totalPercent / countScored) + '%' : '100%';
+      } else {
+        accEl.innerText = '0%';
+      }
+    }
+
+    const historyBox = document.getElementById('history-box');
+    if (historyBox) {
+      if (historyData.length > 0) {
+        historyBox.innerHTML = historyData.slice(0, 5).map(function(h) {
+          return '<div class="history-item">' +
+            '<span>' + h.name + ' (' + h.mode + ')</span>' +
+            '<b>' + h.score + '</b>' +
+          '</div>';
+        }).join('');
+      } else {
+        historyBox.innerHTML = '<p style="color: var(--text-muted); font-size: 12px;">Chưa có dữ liệu.</p>';
+      }
+    }
+  }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(function() {});
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(function() {});
+      }
+    }
+  }
+
+  window.openModeSetup = openModeSetup;
+  window.confirmStartQuiz = confirmStartQuiz;
+  window.startWrongReview = startWrongReview;
+  window.selectSubject = selectSubject;
+  window.updateGradeSelection = updateGradeSelection;
+  window.chooseAnswer = chooseAnswer;
+  window.nextQuestion = nextQuestion;
+  window.exitToHome = exitToHome;
+  window.bellPress = bellPress;
+  window.toggleFullscreen = toggleFullscreen;
+  window.openAdminAuthModal = openAdminAuthModal;
+  window.closeAdminAuthModal = closeAdminAuthModal;
+  window.confirmAdminAuth = confirmAdminAuth;
+  window.closeConfirmModal = closeConfirmModal;
+  window.promptClearHistory = promptClearHistory;
+  window.exportHistoryCSV = exportHistoryCSV;
+  window.switchAdminTab = switchAdminTab;
+  window.openQuestionModal = openQuestionModal;
+  window.closeQuestionModal = closeQuestionModal;
+  window.saveQuestionModal = saveQuestionModal;
+  window.deleteQuestion = deleteQuestion;
+  window.restoreDefault160 = restoreDefault160;
+  window.downloadExcelTemplate = downloadExcelTemplate;
+  window.downloadWordTemplate = downloadWordTemplate;
+  window.importDocuments = importDocuments;
+  window.exportJSON = exportJSON;
+  window.importJSON = importJSON;
+  window.saveAdminPass = saveAdminPass;
+  window.notify = notify;
+
+  window.addEventListener('DOMContentLoaded', function() {
+    renderHomeStats();
+  });
+</script>
+</body>
+</html>
